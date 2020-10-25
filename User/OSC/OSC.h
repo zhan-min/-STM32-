@@ -16,7 +16,7 @@ extern __IO        uint16_t     ADC_ConvertedValue[];
 extern             FlagStatus   Setting;
 
 
-void PlotWave(void);
+void PlotWave(void* parameter);
 void Init(void);
 void Run(void);
 

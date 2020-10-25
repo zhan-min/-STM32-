@@ -95,7 +95,7 @@ FlagStatus Get_Trigger_Status(void)
 }
 
 
-void ADCx_GetWaveData(void)
+void ADCx_GetWaveData(void* parameter)
 {
 	uint16_t  ADC_SampleCount=0;
 	

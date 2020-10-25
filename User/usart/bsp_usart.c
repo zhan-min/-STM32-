@@ -149,7 +149,7 @@ void Uart_DMA_Rx_Data(void)
    USART_RX_DMA_CHANNEL->CNDTR = USART_RBUFF_SIZE;    
    DMA_Cmd(USART_RX_DMA_CHANNEL, ENABLE);       
    //给出二值信号量 ，发送接收到新数据标志，供前台程序查询
-   rt_sem_release(test_sem);  
+   //rt_sem_release(test_sem);  
   /* 
     DMA 开启，等待数据。注意，如果中断发送数据帧的速率很快，MCU来不及处理此次接收到的数据，
     中断又发来数据的话，这里不能开启，否则数据会被覆盖。有2种方式解决：

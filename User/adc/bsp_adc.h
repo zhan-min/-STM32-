@@ -27,7 +27,7 @@
 
 void ADCx_Init(void);
 FlagStatus Get_Trigger_Status(void);
-void ADCx_GetWaveData(void);
+void ADCx_GetWaveData(void* parameter);
 
 #endif /* __BSP_ADC_H */
 
