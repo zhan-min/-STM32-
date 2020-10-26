@@ -5,6 +5,7 @@
 #include "stm32f10x_it.h"
 
 extern rt_mq_t setting_data_queue;
+extern rt_mq_t getwave_status_queue;
 
 extern 						 uint16_t     TimePerDiv_Group[];
 extern             uint8_t     	TimePerDiv_Nbr;

@@ -2,6 +2,8 @@
 #include "bsp_TiMbase.h"
 #include "OSC.h"
 
+#include "bsp_led.h"
+
 //ADC IO端口初始化
 static void ADCx_GPIO_Config(void)
 {
@@ -98,17 +100,23 @@ FlagStatus Get_Trigger_Status(void)
 void ADCx_GetWaveData(void* parameter)
 {
 	uint16_t  ADC_SampleCount=0;
+	uint8_t   flag = 1;//波形数据采集完成标志位
 	
-	while(Get_Trigger_Status() == RESET);
-	
-	while(ADC_SampleCount < ADC_SampleNbr)
+	while(1)
 	{
-		while(ADC_GetITStatus(ADC_x, ADC_IT_EOC) != SET);
-		ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADC_x);
-		ADC_ClearITPendingBit(ADC_x, ADC_IT_EOC);
-		Delay_us( TimePerDiv*1000/50 -7 );
-		ADC_SampleCount++;
-	}	
+		ADC_SampleCount=0;
+		while(Get_Trigger_Status() == RESET);
+	
+		while(ADC_SampleCount < ADC_SampleNbr)
+		{
+			while(ADC_GetITStatus(ADC_x, ADC_IT_EOC) != SET);
+			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADC_x);
+			ADC_ClearITPendingBit(ADC_x, ADC_IT_EOC);
+			Delay_us( TimePerDiv*1000/50 -7 );
+			ADC_SampleCount++;
+		}
+		rt_mq_send(getwave_status_queue, &flag, sizeof(flag));
+	}
 }
 
 

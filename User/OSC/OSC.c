@@ -17,6 +17,7 @@
 
 //进入设置状态标志
 rt_mq_t setting_data_queue = RT_NULL;
+rt_mq_t getwave_status_queue = RT_NULL;
 
 
 
@@ -29,7 +30,7 @@ uint8_t  TimePerDiv_Oder = 0;
 
 volatile   uint16_t    TimePerDiv = 1;//显示间隔时间长度
 uint8_t                TriggerMode = 1;//触发模式
-uint32_t               TriggerValue = 1;//触发电平
+uint32_t               TriggerValue = 0;//触发电平
 __IO       uint16_t    ADC_ConvertedValue[ADC_SampleNbr] = {0};//ADC采集数据
 
 /* 定义线程控制块 */
@@ -59,13 +60,23 @@ extern char Usart_Rx_Buf[USART_RBUFF_SIZE];
 void PlotWave(void* parameter)
 {
 	uint16_t i;
-	LCD_SetColors(WHITE, BLACK);
-	ILI9341_Clear(0,0,199,LCD_Y_LENGTH);
-	for(i=0; i <= ADC_SampleNbr-2; i++)
+	rt_err_t recv_statu = RT_EOK;
+	uint8_t   flag = 0;//波形数据采集完成标志
+	while(1)
 	{
-		LCD_SetTextColor(WHITE);
-		ILI9341_DrawLine ( i, ADC_ConvertedValue[i] /21, i+1, ADC_ConvertedValue[i+1] /21 );
-	}	
+		recv_statu = rt_mq_recv(getwave_status_queue, &flag, sizeof(flag), RT_WAITING_FOREVER);
+		if(flag == 1)
+		{
+			LCD_SetColors(WHITE, BLACK);
+			ILI9341_Clear(0,0,199,LCD_Y_LENGTH);
+			for(i=0; i <= ADC_SampleNbr-2; i++)
+			{
+				LCD_SetTextColor(WHITE);
+				ILI9341_DrawLine ( i, ADC_ConvertedValue[i] /21, i+1, ADC_ConvertedValue[i+1] /21 );
+			}
+		}
+		flag = 0;
+	}
 }
 
 void Setting(void* parameter)
@@ -110,6 +121,10 @@ void Run(void)
 															1,
 															10,
 															RT_IPC_FLAG_FIFO);
+	getwave_status_queue = rt_mq_create("getwave_status_queue",
+															1,
+															1,
+															RT_IPC_FLAG_FIFO);
 	Setting_thread = 
 		rt_thread_create("Setting",
 											Setting,
@@ -118,7 +133,7 @@ void Run(void)
 											1,
 											20);
 	if (Setting_thread != RT_NULL)
-		rt_thread_startup(Setting_thread);
+		//rt_thread_startup(Setting_thread);
 	
 	GetWave_thread =                          /* 线程控制块指针 */
     rt_thread_create( "GetWave",              /* 线程名字 */
@@ -137,12 +152,13 @@ void Run(void)
                       PlotWave,   /* 线程入口函数 */
                       RT_NULL,             /* 线程入口函数参数 */
                       512,                 /* 线程栈大小 */
-                      3,                   /* 线程的优先级 */
+                      2,                   /* 线程的优先级 */
                       20);                 /* 线程时间片 */
                    
     /* 启动线程，开启调度 */
    if (PlotWave_thread != RT_NULL)
         rt_thread_startup(PlotWave_thread);
+
 }
 
 
