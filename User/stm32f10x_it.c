@@ -14,9 +14,9 @@
 
 volatile uint32_t Time_us = 0; // us 计时变量
 
-char dispBuff[100];
-uint16_t              ADC_SampleCount=0;
-uint8_t setting_data_set = 0;
+char        dispBuff[100];
+uint16_t   ADC_SampleCount=0;
+uint8_t    setting_data_set = 0;
 
 
 /**
@@ -62,7 +62,7 @@ void EXTI0_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET)
 	{
-		if(TimePerDiv_Oder < TimePerDiv_Nbr-1)
+		if(TimePerDiv_Oder < TimePerDivOder_Nbr-1)
 			TimePerDiv_Oder ++;
 		else
 			TimePerDiv_Oder = 0;
@@ -90,7 +90,7 @@ void EXTI15_10_IRQHandler(void)
 		if(TimePerDiv_Oder > 0)
 			TimePerDiv_Oder --;
 		else
-			TimePerDiv_Oder = TimePerDiv_Nbr-1;
+			TimePerDiv_Oder = TimePerDivOder_Nbr-1;
 		
 		TimePerDiv = TimePerDiv_Group[TimePerDiv_Oder];
 
