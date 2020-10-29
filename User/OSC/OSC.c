@@ -6,6 +6,7 @@
 #include "bsp_led.h"
 #include "bsp_TiMbase.h"
 #include "bsp_PS2.h"
+#include "bsp_led.h"
 
 
 
@@ -91,6 +92,11 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 		default :
 			break;
 	}
+	rt_kprintf("TriggerValue: %d\n",TriggerValue);
+	rt_kprintf("TriggerMode: %d\n",TriggerMode);
+	rt_kprintf("Sampling_mode: %d\n",Sampling_mode);
+	rt_kprintf("TimePerDiv_Oder: %d\n",TimePerDiv_Oder);
+	rt_kprintf("\n");
 }
 
 
@@ -140,16 +146,17 @@ void Setting(void* parameter)
 	rt_err_t queue_status = RT_EOK;
 	uint8_t  setting_data = 5;//暂存消息队列的消息
 	int8_t   CurSetItem = 0;
-	uint8_t  sending_data = 1;
+	uint8_t  key_start_scan = 1;
 	while(1)
 	{
 		queue_status = rt_mq_recv(setting_data_queue, &setting_data, sizeof(setting_data), RT_WAITING_FOREVER);
 		if(queue_status == RT_EOK && setting_data == 0)//进入设置状态
 		{
+			LED2_ON;
 			setting_data = 5;//使setting_data处于非有效值范围，为退出设置做准备
 			while(setting_data != 0)//再次按下SW时退出设置
 			{
-				queue_status = rt_mq_send(key_scan_queue, &sending_data, sizeof(sending_data));//发送消息，开始扫描键盘
+				queue_status = rt_mq_send(key_scan_queue, &key_start_scan, sizeof(key_start_scan));//发送消息，开始扫描键盘
 				queue_status = rt_mq_recv(setting_data_queue, &setting_data, sizeof(setting_data), 500);//五秒钟无操作则退出设置
 				if(queue_status == RT_EOK)
 				{
@@ -184,6 +191,7 @@ void Setting(void* parameter)
 					}
 				}
 			}
+			LED2_OFF;
 		}
 	}
 }
@@ -200,18 +208,18 @@ void Key_Scan(void* parameter)
 		queue_status = rt_mq_recv(key_scan_queue, &recv_data, sizeof(recv_data), RT_WAITING_FOREVER);
 		if(queue_status == RT_EOK && recv_data == 1)
 		{
-			setting_data = Read_X_Data();
-			if(setting_data == 1)
+			setting_data = Read_Y_Data();
+			if(setting_data < 5)
 				setting_data = 1;
-			else if(setting_data == 0)
+			else if(setting_data > 240)
 				setting_data = 2;
 			
-			setting_data = Read_Y_Data();
-			if(setting_data == 1)
+			setting_data = Read_X_Data();
+			if(setting_data < 5)
 				setting_data = 3;
-			else if(setting_data == 0)
+			else if(setting_data > 240)
 				setting_data = 4;
-			
+			//需设置等待按键按下
 			rt_kprintf("key data: %d",setting_data);
 			rt_mq_send(setting_data_queue, &setting_data, sizeof(setting_data));
 		}
