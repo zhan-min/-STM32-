@@ -1,12 +1,25 @@
-/* 开发板硬件相关头文件 */
+/*
+*************************************************************************
+*                             包含的头文件
+*************************************************************************
+*/
+/* STM32 固件库头文件 */
+#include "stm32f10x.h"
+
+/* 开发板硬件bsp头文件 */
 #include "board.h" 
 #include "bsp_ili9341_lcd.h"
 #include "bsp_adc.h"
 #include "bsp_TiMbase.h"
+#include "bsp_led.h"
+#include "bsp_usart.h"
+#include "bsp_key_exti.h"
+#include "bsp_PS2.h"
 
 /* RT-Thread相关头文件 */
 #include <rthw.h>
 #include <rtthread.h>
+
 
 
 #if defined(RT_USING_USER_MAIN) && defined(RT_USING_HEAP)
@@ -45,6 +58,7 @@ void rt_hw_board_init()
 	USART_Config();
 	ADCx_Init();
   EXTI_Key_Config();
+	PS2_Key_Config();
 	BASIC_TIM_Init();
 	
 	//其中0、3、5、6 模式适合从左至右显示文字，

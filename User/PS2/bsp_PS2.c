@@ -14,7 +14,7 @@ static void EXTI_NVIC_Config(void)
 	NVIC_Init(&NVIC_InitStruct);	
 }
 
-static void PS2_Key_Config(void)
+void PS2_Key_Config(void)
 {
 	GPIO_InitTypeDef GPIO_InitStruct;
 	EXTI_InitTypeDef EXTI_InitStruct;
@@ -30,13 +30,11 @@ static void PS2_Key_Config(void)
 	//初始化SW
 	GPIO_InitStruct.GPIO_Pin = PS2_SW_PIN;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(PS2_SW_PORT, &GPIO_InitStruct);
 	
 	//初始化X
 	GPIO_InitStruct.GPIO_Pin = PS2_X_PIN;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(PS2_X_PORT, &GPIO_InitStruct);
 	
 	//初始化Y
@@ -51,19 +49,23 @@ static void PS2_Key_Config(void)
 	
 	//初始化SW中断
 	EXTI_InitStruct.EXTI_Line = EXTI_Line2;
-	EXTI_InitStruct.EXTI_Mode= EXTI_Mode_Interrupt;
+	EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
 	EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling;
 	EXTI_InitStruct.EXTI_LineCmd = ENABLE;
 	EXTI_Init(&EXTI_InitStruct);
 }
 
-uint8_t Read_X_Data(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+uint8_t Read_X_Data(void)
 {
 	return GPIO_ReadInputDataBit(PS2_X_PORT, PS2_X_PIN);
 }
 
-uint8_t Read_Y_Data(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+uint8_t Read_Y_Data(void)
 {
 	return GPIO_ReadInputDataBit(PS2_Y_PORT, PS2_Y_PIN);
 }
 
+uint8_t Read_SW_Data(void)
+{
+	return GPIO_ReadInputDataBit(PS2_SW_PORT, PS2_SW_PIN);
+}

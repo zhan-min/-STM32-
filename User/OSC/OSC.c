@@ -8,6 +8,7 @@
 #include "bsp_PS2.h"
 
 
+
 #define MeasurementRange   30
 
 /*
@@ -199,18 +200,19 @@ void Key_Scan(void* parameter)
 		queue_status = rt_mq_recv(key_scan_queue, &recv_data, sizeof(recv_data), RT_WAITING_FOREVER);
 		if(queue_status == RT_EOK && recv_data == 1)
 		{
-			setting_data = Read_X_Data(PS2_X_PORT, PS2_X_PIN);
+			setting_data = Read_X_Data();
 			if(setting_data == 1)
 				setting_data = 1;
 			else if(setting_data == 0)
 				setting_data = 2;
 			
-			setting_data = Read_Y_Data(PS2_Y_PORT, PS2_Y_PIN);
+			setting_data = Read_Y_Data();
 			if(setting_data == 1)
 				setting_data = 3;
 			else if(setting_data == 0)
 				setting_data = 4;
 			
+			rt_kprintf("key data: %d",setting_data);
 			rt_mq_send(setting_data_queue, &setting_data, sizeof(setting_data));
 		}
 	}
@@ -226,10 +228,13 @@ void Run(void)
 	key_scan_queue = rt_mq_create("key_scan_queue", 1, 1, RT_IPC_FLAG_FIFO);
 	
 	/**********创建线程************/
-	Setting_thread = 
-		rt_thread_create("Setting", Setting, RT_NULL, 512, 1, 20);
+	Setting_thread = rt_thread_create("Setting", Setting, RT_NULL, 512, 1, 20);
 	if (Setting_thread != RT_NULL)
 		rt_thread_startup(Setting_thread);
+	
+	KeyScan_thread = rt_thread_create("KeyScan", Key_Scan, RT_NULL, 512, 2, 20);
+	 if (KeyScan_thread != RT_NULL)
+		 rt_thread_startup(KeyScan_thread);
 	
 	GetWave_thread =                          /* 线程控制块指针 */
     rt_thread_create( "GetWave",              /* 线程名字 */
@@ -250,10 +255,6 @@ void Run(void)
                       20);                 /* 线程时间片 */
    if (PlotWave_thread != RT_NULL)
         rt_thread_startup(PlotWave_thread);
-	 
-	 KeyScan_thread = rt_thread_create("KeyScan", Key_Scan, RT_NULL, 512, 2, 20);
-	 if(KeyScan_thread != RT_NULL)
-		 rt_thread_startup(KeyScan_thread);
 }
 
 
