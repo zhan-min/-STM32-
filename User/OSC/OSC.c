@@ -39,7 +39,7 @@ int8_t   Sampling_mode = 0; //代号2，采样模式，0：自动，1：普通，2：单次
 uint16_t  TimePerDiv = 1;   //代号3，每格代表的时间间隔
 
 //要显示的信息
-__IO       uint16_t    ADC_ConvertedValue[ADC_SampleNbr] = {0};//ADC采集数据
+__IO       uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
 
 
 
@@ -112,7 +112,7 @@ void PlotWave(void* parameter)
 		{
 			LCD_SetColors(WHITE, BLACK);
 			ILI9341_Clear(0,0,199,LCD_Y_LENGTH);
-			for(i=0; i <= ADC_SampleNbr-2; i++)
+			for(i=0; i <= ADCx_1_SampleNbr-2; i++)
 			{
 				LCD_SetTextColor(WHITE);
 				ILI9341_DrawLine ( i, ADC_ConvertedValue[i] /21, i+1, ADC_ConvertedValue[i+1] /21 );
@@ -238,7 +238,7 @@ void Run(void)
 	
 	GetWave_thread =                          /* 线程控制块指针 */
     rt_thread_create( "GetWave",              /* 线程名字 */
-                      ADCx_GetWaveData,   /* 线程入口函数 */
+                      Get_Wave_Data,   /* 线程入口函数 */
                       RT_NULL,             /* 线程入口函数参数 */
                       512,                 /* 线程栈大小 */
                       3,                   /* 线程的优先级 */

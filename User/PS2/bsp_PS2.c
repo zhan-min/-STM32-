@@ -1,5 +1,8 @@
-#include "bsp_PS2.h"
 #include "stm32f10x_gpio.h"
+#include "bsp_PS2.h"
+#include "bsp_adc.h"
+
+//X和Y的配置在ADC中
 
 static void EXTI_NVIC_Config(void)
 {
@@ -24,24 +27,11 @@ void PS2_Key_Config(void)
 	
 	//初始化GPIO
 	RCC_APB2PeriphClockCmd(PS2_SW_CLK, ENABLE);
-	RCC_APB2PeriphClockCmd(PS2_X_CLK, ENABLE);
-	RCC_APB2PeriphClockCmd(PS2_Y_CLK, ENABLE);
 	
 	//初始化SW
 	GPIO_InitStruct.GPIO_Pin = PS2_SW_PIN;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;
 	GPIO_Init(PS2_SW_PORT, &GPIO_InitStruct);
-	
-	//初始化X
-	GPIO_InitStruct.GPIO_Pin = PS2_X_PIN;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_Init(PS2_X_PORT, &GPIO_InitStruct);
-	
-	//初始化Y
-	GPIO_InitStruct.GPIO_Pin = PS2_Y_PIN;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(PS2_Y_PORT, &GPIO_InitStruct);
 	
 	//初始化EXTI
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
@@ -57,12 +47,12 @@ void PS2_Key_Config(void)
 
 uint8_t Read_X_Data(void)
 {
-	return GPIO_ReadInputDataBit(PS2_X_PORT, PS2_X_PIN);
+	return Get_X_Data();
 }
 
 uint8_t Read_Y_Data(void)
 {
-	return GPIO_ReadInputDataBit(PS2_Y_PORT, PS2_Y_PIN);
+	return Get_Y_Data();
 }
 
 uint8_t Read_SW_Data(void)
