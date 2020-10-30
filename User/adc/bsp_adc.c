@@ -153,23 +153,25 @@ FlagStatus Get_Trigger_Status(void)
 
 void Get_Wave_Data(void* parameter)
 {
-	uint16_t  ADC_SampleCount=0;
+	uint16_t  ADC_SampleCount = 0;
 	uint8_t   flag = 1;//波形数据采集完成标志位
 	
 	while(1)
 	{
 		ADC_SampleCount=0;
-		while(Get_Trigger_Status() == RESET);
+		if(SamplingMode == 1)//普通采样模式需判断触发条件，SamplingMode=0为自动采样模式，不需要判断触发条件
+			while(Get_Trigger_Status() == RESET);
 	
 		while(ADC_SampleCount < ADCx_1_SampleNbr)
 		{
 			while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
 			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1);
 			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
-			Delay_us( TimePerDiv*1000/50 -7 );
+			Delay_us( TimePerDiv*1000/50 -7 );//采样间隔时间
 			ADC_SampleCount++;
 		}
 		rt_mq_send(getwave_status_queue, &flag, sizeof(flag));
+		while(SamplingMode != 2);//单次采样模式
 	}
 }
 

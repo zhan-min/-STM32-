@@ -34,9 +34,9 @@ uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]
 int8_t  TimePerDivOder = 0;//当前每格间隔时间的序号
 
 //可设置项
-int8_t   TriggerValue = 0;  //代号0，触发阀值
-int8_t   TriggerMode = 0;   //代号1，触发模式，0：下降沿触发，1：上升沿触发
-int8_t   SamplingMode = 0;  //代号2，采样模式，0：自动，1：普通，2：单次
+int8_t    TriggerValue = 0;  //代号0，触发阀值
+int8_t    TriggerMode = 0;   //代号1，触发模式，0：下降沿触发，1：上升沿触发
+int8_t    SamplingMode = 0;  //代号2，采样模式，0：自动，1：普通，2：单次
 uint16_t  TimePerDiv = 1;   //代号3，每格代表的时间间隔
 
 //要显示的信息
@@ -84,11 +84,12 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 		}
 		case 3:
 		{
-			TimePerDiv += Operation;
+			TimePerDivOder += Operation;
 			if(TimePerDivOder < 0)
 				TimePerDivOder = 0;
 			if(TimePerDivOder > TimePerDivOderNbr-1)
 				TimePerDivOder = TimePerDivOderNbr-1;
+			TimePerDiv = TimePerDiv_Group[TimePerDivOder];
 			break;
 		}
 		default :
@@ -97,7 +98,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 	rt_kprintf("TriggerValue: %d\n",TriggerValue);
 	rt_kprintf("TriggerMode: %d\n",TriggerMode);
 	rt_kprintf("Sampling_mode: %d\n",SamplingMode);
-	rt_kprintf("TimePerDiv_Oder: %d\n",TimePerDivOder);
+	rt_kprintf("TimePerDiv: %d\n",TimePerDiv);
 	rt_kprintf("\n");
 }
 
@@ -119,7 +120,7 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 	sprintf(dispBuff,"SamplingMode: %d", SamplingMode);
 	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
 	
-	sprintf(dispBuff,"TimePerDiv: %d", TimePerDiv_Group[TimePerDivOder]);
+	sprintf(dispBuff,"TimePerDiv: %d", TimePerDiv);
 	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
 }
 
@@ -218,6 +219,8 @@ void Setting(void* parameter)
 							break;
 					}
 				}
+				else
+					break;
 			}
 			LED2_OFF;//退出设置状态
 		}
@@ -274,9 +277,9 @@ void Run(void)
 	 if (KeyScan_thread != RT_NULL)
 		 rt_thread_startup(KeyScan_thread);
 	
-	GetWave_thread =                          /* 线程控制块指针 */
-    rt_thread_create( "GetWave",              /* 线程名字 */
-                      Get_Wave_Data,   /* 线程入口函数 */
+	GetWave_thread =                         /* 线程控制块指针 */
+    rt_thread_create( "GetWave",           /* 线程名字 */
+                      Get_Wave_Data,       /* 线程入口函数 */
                       RT_NULL,             /* 线程入口函数参数 */
                       512,                 /* 线程栈大小 */
                       3,                   /* 线程的优先级 */
@@ -284,9 +287,9 @@ void Run(void)
    if (GetWave_thread != RT_NULL) 
         rt_thread_startup(GetWave_thread);
 	 
-	 PlotWave_thread =                          /* 线程控制块指针 */
-    rt_thread_create( "PlotWave",              /* 线程名字 */
-                      PlotWave,   /* 线程入口函数 */
+	 PlotWave_thread =                       /* 线程控制块指针 */
+    rt_thread_create( "PlotWave",          /* 线程名字 */
+                      PlotWave,            /* 线程入口函数 */
                       RT_NULL,             /* 线程入口函数参数 */
                       512,                 /* 线程栈大小 */
                       3,                   /* 线程的优先级 */
