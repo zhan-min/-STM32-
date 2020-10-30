@@ -30,13 +30,13 @@ static rt_thread_t KeyScan_thread  = RT_NULL;
 
 
 uint16_t TimePerDiv_Group[] = {2, 5, 10, 20, 50, 100, 200, 500};
-uint8_t  TimePerDivOder_Nbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]);
-int8_t  TimePerDiv_Oder = 0;//当前每格间隔时间的序号
+uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]);
+int8_t  TimePerDivOder = 0;//当前每格间隔时间的序号
 
 //可设置项
 int8_t   TriggerValue = 0;  //代号0，触发阀值
 int8_t   TriggerMode = 0;   //代号1，触发模式，0：下降沿触发，1：上升沿触发
-int8_t   Sampling_mode = 0; //代号2，采样模式，0：自动，1：普通，2：单次
+int8_t   SamplingMode = 0;  //代号2，采样模式，0：自动，1：普通，2：单次
 uint16_t  TimePerDiv = 1;   //代号3，每格代表的时间间隔
 
 //要显示的信息
@@ -49,6 +49,8 @@ __IO       uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
 *                             辅助函数
 *************************************************************************
 */
+
+//执行更改设置操作
 static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 {
 	switch(CurSetItem)
@@ -61,7 +63,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 			if(TriggerValue > MeasurementRange)
 				TriggerValue = MeasurementRange;
 			break;
-		}			
+		}
 		case 1:
 		{
 			TriggerMode += Operation;
@@ -73,20 +75,20 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 		}
 		case 2:
 		{
-			Sampling_mode += Operation;
-			if(Sampling_mode < 0)
-				Sampling_mode = 0;
-			if(Sampling_mode > 2)
-				Sampling_mode = 2;
+			SamplingMode += Operation;
+			if(SamplingMode < 0)
+				SamplingMode = 0;
+			if(SamplingMode > 2)
+				SamplingMode = 2;
 			break;
 		}
 		case 3:
 		{
 			TimePerDiv += Operation;
-			if(TimePerDiv_Oder < 0)
-				TimePerDiv_Oder = 0;
-			if(TimePerDiv_Oder > TimePerDivOder_Nbr-1)
-				TimePerDiv_Oder = TimePerDivOder_Nbr-1;
+			if(TimePerDivOder < 0)
+				TimePerDivOder = 0;
+			if(TimePerDivOder > TimePerDivOderNbr-1)
+				TimePerDivOder = TimePerDivOderNbr-1;
 			break;
 		}
 		default :
@@ -94,11 +96,32 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 	}
 	rt_kprintf("TriggerValue: %d\n",TriggerValue);
 	rt_kprintf("TriggerMode: %d\n",TriggerMode);
-	rt_kprintf("Sampling_mode: %d\n",Sampling_mode);
-	rt_kprintf("TimePerDiv_Oder: %d\n",TimePerDiv_Oder);
+	rt_kprintf("Sampling_mode: %d\n",SamplingMode);
+	rt_kprintf("TimePerDiv_Oder: %d\n",TimePerDivOder);
 	rt_kprintf("\n");
 }
 
+//刷新可设置项的显示
+void Setting_Inf_Update(uint8_t CurSetItem)
+{
+	char dispBuff[100];
+	
+	ILI9341_Clear(200, 0, 120, (((sFONT *)LCD_GetFont())->Height)*4);
+	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*CurSetItem, "->");
+	
+	/*使用c标准库把变量转化成字符串*/
+	sprintf(dispBuff,"TriggerValue: %d", TriggerValue);
+	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
+	
+	sprintf(dispBuff,"TriggerMode: %d", TriggerMode);
+	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
+	
+	sprintf(dispBuff,"SamplingMode: %d", SamplingMode);
+	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
+	
+	sprintf(dispBuff,"TimePerDiv: %d", TimePerDiv_Group[TimePerDivOder]);
+	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
+}
 
 /*
 *************************************************************************
@@ -139,20 +162,19 @@ void PlotWave(void* parameter)
        2
 ***/
 
-//待完成工作：绘制光标
 //设置
 void Setting(void* parameter)
 {
 	rt_err_t queue_status = RT_EOK;
 	uint8_t  setting_data = 5;//暂存消息队列的消息
-	int8_t   CurSetItem = 0;
+	uint8_t   CurSetItem = 0;
 	uint8_t  key_start_scan = 1;
 	while(1)
 	{
 		queue_status = rt_mq_recv(setting_data_queue, &setting_data, sizeof(setting_data), RT_WAITING_FOREVER);
 		if(queue_status == RT_EOK && setting_data == 0)//进入设置状态
 		{
-			LED2_ON;
+			LED2_ON;//进入设置状态指示灯
 			setting_data = 5;//使setting_data处于非有效值范围，为退出设置做准备
 			while(setting_data != 0)//再次按下SW时退出设置
 			{
@@ -163,27 +185,33 @@ void Setting(void* parameter)
 					switch(setting_data)
 					{
 						case 1:
-						{
-							CurSetItem--;
-							if(CurSetItem < 0)
-								CurSetItem = 0;
+						{							
+							if(CurSetItem > 0)
+							{
+								CurSetItem--;
+								Setting_Inf_Update(CurSetItem);
+							}								
 							break;
 						}
 						case 2:
-						{
-							CurSetItem++;
-							if(CurSetItem > 3)
-								CurSetItem = 3;
+						{							
+							if(CurSetItem < 3)
+							{
+								CurSetItem++;
+								Setting_Inf_Update(CurSetItem);
+							}								
 							break;
 						}
 						case 3:
 						{
 							Setting_do(CurSetItem, -1);//+1，-1表示对可设置项进行何种操作
+							Setting_Inf_Update(CurSetItem);
 							break;
 						}
 						case 4:
 						{
 							Setting_do(CurSetItem, 1);//+1，-1表示对可设置项进行何种操作
+							Setting_Inf_Update(CurSetItem);
 							break;
 						}
 						default :
@@ -191,7 +219,7 @@ void Setting(void* parameter)
 					}
 				}
 			}
-			LED2_OFF;
+			LED2_OFF;//退出设置状态
 		}
 	}
 }
@@ -208,18 +236,20 @@ void Key_Scan(void* parameter)
 		queue_status = rt_mq_recv(key_scan_queue, &recv_data, sizeof(recv_data), RT_WAITING_FOREVER);
 		if(queue_status == RT_EOK && recv_data == 1)
 		{
-			setting_data = Read_Y_Data();
-			if(setting_data < 5)
-				setting_data = 1;
-			else if(setting_data > 240)
-				setting_data = 2;
-			
-			setting_data = Read_X_Data();
-			if(setting_data < 5)
-				setting_data = 3;
-			else if(setting_data > 240)
-				setting_data = 4;
-			//需设置等待按键按下
+			while(setting_data > 4)
+			{
+				setting_data = Read_Y_Data();
+				if(setting_data < 5)
+					setting_data = 1;
+				else if(setting_data > 240)
+					setting_data = 2;
+				
+				setting_data = Read_X_Data();
+				if(setting_data < 5)
+					setting_data = 3;
+				else if(setting_data > 240)
+					setting_data = 4;
+			}
 			rt_kprintf("key data: %d",setting_data);
 			rt_mq_send(setting_data_queue, &setting_data, sizeof(setting_data));
 		}

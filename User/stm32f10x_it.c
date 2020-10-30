@@ -63,12 +63,12 @@ void EXTI0_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET)
 	{
-		if(TimePerDiv_Oder < TimePerDivOder_Nbr-1)
-			TimePerDiv_Oder ++;
+		if(TimePerDivOder < TimePerDivOderNbr-1)
+			TimePerDivOder ++;
 		else
-			TimePerDiv_Oder = 0;
+			TimePerDivOder = 0;
 		
-		TimePerDiv = TimePerDiv_Group[TimePerDiv_Oder];		
+		TimePerDiv = TimePerDiv_Group[TimePerDivOder];		
 		
 		/*使用c标准库把变量转化成字符串*/
 		sprintf(dispBuff,"T: %dms",TimePerDiv);
@@ -88,16 +88,16 @@ void EXTI15_10_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line13) != RESET)
 	{
-		if(TimePerDiv_Oder > 0)
-			TimePerDiv_Oder --;
+		if(TimePerDivOder > 0)
+			TimePerDivOder --;
 		else
-			TimePerDiv_Oder = TimePerDivOder_Nbr-1;
+			TimePerDivOder = TimePerDivOderNbr-1;
 		
-		TimePerDiv = TimePerDiv_Group[TimePerDiv_Oder];
+		TimePerDiv = TimePerDiv_Group[TimePerDivOder];
 
 		/*使用c标准库把变量转化成字符串*/
 		sprintf(dispBuff,"T: %dms",TimePerDiv);
-		ILI9341_Clear(200, 0, 320, (((sFONT *)LCD_GetFont())->Height));	
+		ILI9341_Clear(200, 0, 120, (((sFONT *)LCD_GetFont())->Height));	
 		ILI9341_DispString_EN(210, 0,dispBuff);
 	}
 	EXTI_ClearITPendingBit(EXTI_Line13);
