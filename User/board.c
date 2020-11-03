@@ -57,7 +57,7 @@ void rt_hw_board_init()
 	LED_GPIO_Config();
 	USART_Config();
 	ADCx_Init();
-  //EXTI_Key_Config();
+  EXTI_Key_Config();
 	PS2_Key_Config();
 	BASIC_TIM_Init();
 	

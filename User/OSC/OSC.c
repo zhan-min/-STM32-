@@ -168,7 +168,7 @@ void Setting(void* parameter)
 {
 	rt_err_t queue_status = RT_EOK;
 	uint8_t  setting_data = 5;//暂存消息队列的消息
-	uint8_t   CurSetItem = 0;
+	uint8_t  CurSetItem = 0;
 	uint8_t  key_start_scan = 1;
 	while(1)
 	{
@@ -180,13 +180,14 @@ void Setting(void* parameter)
 			while(setting_data != 0)//再次按下SW时退出设置
 			{
 				queue_status = rt_mq_send(key_scan_queue, &key_start_scan, sizeof(key_start_scan));//发送消息，开始扫描键盘
-				queue_status = rt_mq_recv(setting_data_queue, &setting_data, sizeof(setting_data), 500);//五秒钟无操作则退出设置
+				queue_status = rt_mq_recv(setting_data_queue, &setting_data, sizeof(setting_data), 5000);//五秒钟无操作则退出设置
 				if(queue_status == RT_EOK)
 				{
+					
 					switch(setting_data)
 					{
 						case 1:
-						{							
+						{
 							if(CurSetItem > 0)
 							{
 								CurSetItem--;
@@ -220,7 +221,10 @@ void Setting(void* parameter)
 					}
 				}
 				else
+				{
+					rt_kprintf("recieve_error");
 					break;
+				}
 			}
 			LED2_OFF;//退出设置状态
 		}
@@ -236,41 +240,39 @@ void Key_Scan(void* parameter)
 	uint8_t  setting_data = 5;
 	while(1)
 	{
+		setting_data = 5;
 		queue_status = rt_mq_recv(key_scan_queue, &recv_data, sizeof(recv_data), RT_WAITING_FOREVER);
 		if(queue_status == RT_EOK && recv_data == 1)
 		{
 			while(setting_data > 4)
 			{
-				setting_data = Read_Y_Data();
-				rt_kprintf("Y_data: %d\n",setting_data);
-				if(setting_data < 5)
+				if(Read_Y_Data() < 5)
 				{
-					rt_thread_delay(1);
-					if(setting_data < 5)
+					rt_thread_delay(100);
+					if(Read_Y_Data() < 5)
 						setting_data = 1;
 				}				
-				else if(setting_data > 250)
+				else if(Read_Y_Data() > 250)
 				{
-					rt_thread_delay(1);
-					if(setting_data > 250)
+					rt_thread_delay(100);
+					if(Read_Y_Data() > 250)
 						setting_data = 2;
 				}
 				
-				setting_data = Read_X_Data();
-				if(setting_data < 5)
+				if(Read_X_Data() < 5)
 				{
-					rt_thread_delay(1);
-					if(setting_data < 5)
+					rt_thread_delay(100);
+					if(Read_X_Data() < 5)
 						setting_data = 3;
 				}
-				else if(setting_data > 250)
+				else if(Read_X_Data() > 250)
 				{
-					rt_thread_delay(1);
-					if(setting_data > 250)
+					rt_thread_delay(100);
+					if(Read_X_Data() > 250)
 						setting_data = 4;
 				}
 			}
-			rt_kprintf("key data: %d\n",setting_data);
+			rt_kprintf("setting_data: %d\n",setting_data);
 			rt_mq_send(setting_data_queue, &setting_data, sizeof(setting_data));
 		}
 	}
