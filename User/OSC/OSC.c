@@ -111,17 +111,17 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*CurSetItem, "->");
 	
 	/*使用c标准库把变量转化成字符串*/
-	sprintf(dispBuff,"TriggerValue: %d", TriggerValue);
-	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
+	sprintf(dispBuff,"TV: %d", TriggerValue);
+	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
 	
-	sprintf(dispBuff,"TriggerMode: %d", TriggerMode);
-	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
+	sprintf(dispBuff,"TM: %d", TriggerMode);
+	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
 	
-	sprintf(dispBuff,"SamplingMode: %d", SamplingMode);
-	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
+	sprintf(dispBuff,"SM: %d", SamplingMode);
+	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
 	
-	sprintf(dispBuff,"TimePerDiv: %d", TimePerDiv);
-	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
+	sprintf(dispBuff,"TPD: %d", TimePerDiv);
+	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
 }
 
 /*
@@ -242,18 +242,35 @@ void Key_Scan(void* parameter)
 			while(setting_data > 4)
 			{
 				setting_data = Read_Y_Data();
+				rt_kprintf("Y_data: %d\n",setting_data);
 				if(setting_data < 5)
-					setting_data = 1;
-				else if(setting_data > 240)
-					setting_data = 2;
+				{
+					rt_thread_delay(1);
+					if(setting_data < 5)
+						setting_data = 1;
+				}				
+				else if(setting_data > 250)
+				{
+					rt_thread_delay(1);
+					if(setting_data > 250)
+						setting_data = 2;
+				}
 				
 				setting_data = Read_X_Data();
 				if(setting_data < 5)
-					setting_data = 3;
-				else if(setting_data > 240)
-					setting_data = 4;
+				{
+					rt_thread_delay(1);
+					if(setting_data < 5)
+						setting_data = 3;
+				}
+				else if(setting_data > 250)
+				{
+					rt_thread_delay(1);
+					if(setting_data > 250)
+						setting_data = 4;
+				}
 			}
-			rt_kprintf("key data: %d",setting_data);
+			rt_kprintf("key data: %d\n",setting_data);
 			rt_mq_send(setting_data_queue, &setting_data, sizeof(setting_data));
 		}
 	}
