@@ -9,7 +9,8 @@ extern rt_mq_t setting_data_queue;
 extern rt_mq_t getwave_status_queue;
 
 //可设置项
-extern             uint16_t     TimePerDiv;//每格代表的时间间隔
+extern             uint16_t    TimePerDiv;//每格代表的时间间隔
+extern             int8_t      TriggerType;
 extern             int8_t      TriggerMode;//触发模式，0：下降沿触发，1：上升沿触发
 extern             int8_t      TriggerValue;//触发阀值
 extern             int8_t      SamplingMode;//采样模式，0：自动，1：普通，2：单次

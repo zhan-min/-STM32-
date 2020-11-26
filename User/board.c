@@ -15,6 +15,7 @@
 #include "bsp_usart.h"
 #include "bsp_key_exti.h"
 #include "bsp_PS2.h"
+#include "OSC.h"
 
 /* RT-Thread相关头文件 */
 #include <rthw.h>
@@ -67,9 +68,26 @@ void rt_hw_board_init()
   ILI9341_GramScan ( 3 );
 	LCD_SetColors(WHITE, BLACK);
 	ILI9341_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);
+	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*0, "->");
 	
-	ILI9341_Clear(200, 0, 320, (((sFONT *)LCD_GetFont())->Height));	
-	ILI9341_DispString_EN(210, 0,"T: 2ms");
+	char dispBuff[100];
+	
+	
+	/*使用c标准库把变量转化成字符串*/
+	sprintf(dispBuff,"TV: %d", TriggerValue);
+	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
+	
+	sprintf(dispBuff,"TT: %d", TriggerType);
+	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
+	
+	sprintf(dispBuff,"TM: %d", TriggerMode);
+	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
+	
+	sprintf(dispBuff,"SM: %d", SamplingMode);
+	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
+	
+	sprintf(dispBuff,"TPD: %d", TimePerDiv);
+	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
 	
 	
 	

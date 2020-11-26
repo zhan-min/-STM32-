@@ -35,9 +35,10 @@ int8_t  TimePerDivOder = 0;//当前每格间隔时间的序号
 
 //可设置项
 int8_t    TriggerValue = 0;  //代号0，触发阀值
-int8_t    TriggerMode = 0;   //代号1，触发模式，0：下降沿触发，1：上升沿触发
-int8_t    SamplingMode = 0;  //代号2，采样模式，0：自动，1：普通，2：单次
-uint16_t  TimePerDiv = 1;   //代号3，每格代表的时间间隔
+int8_t    TriggerType = 0;  //代号1，触发类型，0：自动，1：单次，2：普通
+int8_t    TriggerMode = 0;   //代号2，触发模式，0：下降沿触发，1：上升沿触发
+int8_t    SamplingMode = 0;  //代号3，采样模式，0：自动，1：普通，2：单次
+uint16_t  TimePerDiv = 1;   //代号4，每格代表的时间间隔
 
 //要显示的信息
 __IO       uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
@@ -66,6 +67,15 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 		}
 		case 1:
 		{
+			TriggerType += Operation;
+			if(TriggerType < 0)
+				TriggerType = 0;
+			if(TriggerType > 2)
+				TriggerType = 2;
+			break;
+		}
+		case 2:
+		{
 			TriggerMode += Operation;
 			if(TriggerMode < 0)
 				TriggerMode = 0;
@@ -73,7 +83,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 				TriggerMode = 1;
 			break;
 		}
-		case 2:
+		case 3:
 		{
 			SamplingMode += Operation;
 			if(SamplingMode < 0)
@@ -82,7 +92,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 				SamplingMode = 2;
 			break;
 		}
-		case 3:
+		case 4:
 		{
 			TimePerDivOder += Operation;
 			if(TimePerDivOder < 0)
@@ -96,6 +106,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 			break;
 	}
 	rt_kprintf("TriggerValue: %d\n",TriggerValue);
+	rt_kprintf("TriggerType: %d\n",TriggerType);
 	rt_kprintf("TriggerMode: %d\n",TriggerMode);
 	rt_kprintf("Sampling_mode: %d\n",SamplingMode);
 	rt_kprintf("TimePerDiv: %d\n",TimePerDiv);
@@ -107,21 +118,24 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 {
 	char dispBuff[100];
 	
-	ILI9341_Clear(200, 0, 120, (((sFONT *)LCD_GetFont())->Height)*4);
+	ILI9341_Clear(200, 0, 120, (((sFONT *)LCD_GetFont())->Height)*5);
 	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*CurSetItem, "->");
 	
 	/*使用c标准库把变量转化成字符串*/
 	sprintf(dispBuff,"TV: %d", TriggerValue);
 	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
 	
-	sprintf(dispBuff,"TM: %d", TriggerMode);
+	sprintf(dispBuff,"TT: %d", TriggerType);
 	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
 	
-	sprintf(dispBuff,"SM: %d", SamplingMode);
+	sprintf(dispBuff,"TM: %d", TriggerMode);
 	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
 	
-	sprintf(dispBuff,"TPD: %d", TimePerDiv);
+	sprintf(dispBuff,"SM: %d", SamplingMode);
 	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
+	
+	sprintf(dispBuff,"TPD: %d", TimePerDiv);
+	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
 }
 
 /*
@@ -174,7 +188,7 @@ void Setting(void* parameter)
 	{
 		queue_status = rt_mq_recv(setting_data_queue, &setting_data, sizeof(setting_data), RT_WAITING_FOREVER);
 		if(queue_status == RT_EOK && setting_data == 0)//进入设置状态
-		{
+		{			
 			LED2_ON;//进入设置状态指示灯
 			setting_data = 5;//使setting_data处于非有效值范围，为退出设置做准备
 			while(setting_data != 0)//再次按下SW时退出设置
@@ -183,7 +197,7 @@ void Setting(void* parameter)
 				queue_status = rt_mq_recv(setting_data_queue, &setting_data, sizeof(setting_data), 5000);//五秒钟无操作则退出设置
 				if(queue_status == RT_EOK)
 				{
-					
+					rt_kprintf("setting_data: %d\n",setting_data);
 					switch(setting_data)
 					{
 						case 1:
@@ -197,7 +211,7 @@ void Setting(void* parameter)
 						}
 						case 2:
 						{							
-							if(CurSetItem < 3)
+							if(CurSetItem < 4)
 							{
 								CurSetItem++;
 								Setting_Inf_Update(CurSetItem);
@@ -219,11 +233,6 @@ void Setting(void* parameter)
 						default :
 							break;
 					}
-				}
-				else
-				{
-					rt_kprintf("recieve_error");
-					break;
 				}
 			}
 			LED2_OFF;//退出设置状态
@@ -248,26 +257,26 @@ void Key_Scan(void* parameter)
 			{
 				if(Read_Y_Data() < 5)
 				{
-					rt_thread_delay(100);
+					rt_thread_delay(500);
 					if(Read_Y_Data() < 5)
 						setting_data = 1;
 				}				
 				else if(Read_Y_Data() > 250)
 				{
-					rt_thread_delay(100);
+					rt_thread_delay(500);
 					if(Read_Y_Data() > 250)
 						setting_data = 2;
 				}
 				
 				if(Read_X_Data() < 5)
 				{
-					rt_thread_delay(100);
+					rt_thread_delay(500);
 					if(Read_X_Data() < 5)
 						setting_data = 3;
 				}
 				else if(Read_X_Data() > 250)
 				{
-					rt_thread_delay(100);
+					rt_thread_delay(500);
 					if(Read_X_Data() > 250)
 						setting_data = 4;
 				}
