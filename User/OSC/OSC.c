@@ -23,25 +23,26 @@ rt_mq_t getwave_status_queue = RT_NULL;//采集完成标志
 rt_mq_t key_scan_queue = RT_NULL;//键盘扫描开始标志
 
 /* 定义线程控制块 */
-static rt_thread_t Setting_thread  = RT_NULL;
-static rt_thread_t GetWave_thread  = RT_NULL;
-static rt_thread_t PlotWave_thread = RT_NULL;
-static rt_thread_t KeyScan_thread  = RT_NULL;
+rt_thread_t Setting_thread  = RT_NULL;
+rt_thread_t GetWave_thread  = RT_NULL;
+rt_thread_t PlotWave_thread = RT_NULL;
+rt_thread_t KeyScan_thread  = RT_NULL;
 
 
 uint16_t TimePerDiv_Group[] = {2, 5, 10, 20, 50, 100, 200, 500};
 uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]);
-int8_t  TimePerDivOder = 0;//当前每格间隔时间的序号
+int8_t   TimePerDivOder = 0;//当前每格间隔时间的序号
 
 //可设置项
 int8_t    TriggerValue = 0;  //代号0，触发阀值
-int8_t    TriggerType = 0;  //代号1，触发类型，0：自动，1：单次，2：普通
-int8_t    TriggerMode = 0;   //代号2，触发模式，0：下降沿触发，1：上升沿触发
+int8_t    RangeMode = 0;  //代号1，量程模式，0：自动，1：手动
+int8_t    TriggerMode = 0;   //代号2，触发模式，0：下降沿触发，1：上升沿触发，2：上升沿下降沿触发
 int8_t    SamplingMode = 0;  //代号3，采样模式，0：自动，1：普通，2：单次
 uint16_t  TimePerDiv = 1;   //代号4，每格代表的时间间隔
 
 //要显示的信息
-__IO       uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
+__IO  uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
+FlagStatus  StopSample = RESET;//停止采样标志
 
 
 
@@ -67,11 +68,11 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 		}
 		case 1:
 		{
-			TriggerType += Operation;
-			if(TriggerType < 0)
-				TriggerType = 0;
-			if(TriggerType > 2)
-				TriggerType = 2;
+			RangeMode += Operation;
+			if(RangeMode < 0)
+				RangeMode = 0;
+			if(RangeMode > 1)
+				RangeMode = 1;
 			break;
 		}
 		case 2:
@@ -79,8 +80,8 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 			TriggerMode += Operation;
 			if(TriggerMode < 0)
 				TriggerMode = 0;
-			if(TriggerMode > 1)
-				TriggerMode = 1;
+			if(TriggerMode > 2)
+				TriggerMode = 2;
 			break;
 		}
 		case 3:
@@ -106,7 +107,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 			break;
 	}
 	rt_kprintf("TriggerValue: %d\n",TriggerValue);
-	rt_kprintf("TriggerType: %d\n",TriggerType);
+	rt_kprintf("RangeMode: %d\n",RangeMode);
 	rt_kprintf("TriggerMode: %d\n",TriggerMode);
 	rt_kprintf("Sampling_mode: %d\n",SamplingMode);
 	rt_kprintf("TimePerDiv: %d\n",TimePerDiv);
@@ -125,7 +126,7 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 	sprintf(dispBuff,"TV: %d", TriggerValue);
 	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
 	
-	sprintf(dispBuff,"TT: %d", TriggerType);
+	sprintf(dispBuff,"RD: %d", RangeMode);
 	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
 	
 	sprintf(dispBuff,"TM: %d", TriggerMode);
@@ -307,7 +308,7 @@ void Run(void)
 	
 	GetWave_thread =                         /* 线程控制块指针 */
     rt_thread_create( "GetWave",           /* 线程名字 */
-                      Get_Wave_Data,       /* 线程入口函数 */
+                      Get_Wave,       /* 线程入口函数 */
                       RT_NULL,             /* 线程入口函数参数 */
                       512,                 /* 线程栈大小 */
                       3,                   /* 线程的优先级 */

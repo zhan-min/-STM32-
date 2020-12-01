@@ -129,50 +129,58 @@ FlagStatus Get_Trigger_Status(void)
 {
 	uint16_t d0, d1;
 	
-	while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
-	d0 = ADC_GetConversionValue(ADCx_1);
-	ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
-	
-	while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
-	d1 = ADC_GetConversionValue(ADCx_1);
-	ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
-	
-	if(TriggerMode == 1)
+	if(SamplingMode == 0)
+		return SET;
+	else if((SamplingMode == 1) || (SamplingMode == 2))
 	{
-		if(d1 - d0 > TriggerValue)
-			return SET;
-	}
-	else if(TriggerMode == 0)
-	{
-		if(d0 - d1 > TriggerValue)
-			return SET;
-	}
+		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
+		d0 = ADC_GetConversionValue(ADCx_1);
+		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
+		
+		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
+		d1 = ADC_GetConversionValue(ADCx_1);
+		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
+		
+		if(TriggerMode == 0)
+		{
+			if((d0 - d1 > 0) && (d1 == TriggerValue))//应该可能大概需要改成区间判断，先这样吧
+				return SET;
+		}
+		else if(TriggerMode == 1)
+		{
+			if((d1 - d0 > 0) && (d1 == TriggerValue))
+				return SET;
+		}
+		else if(TriggerMode == 2)
+		{
+			if(d1 == TriggerValue)
+				return SET;
+		}
+	}	
 	return RESET;
 }
 
 
-void Get_Wave_Data(void* parameter)
+
+void Get_Wave(void* parameter)
 {
-	uint16_t  ADC_SampleCount = 0;
 	uint8_t   flag = 1;//波形数据采集完成标志位
+	uint16_t  ADC_SampleCount = 0;
 	
-	while(1)
-	{
-		ADC_SampleCount=0;
-		if(SamplingMode == 1)//普通采样模式需判断触发条件，SamplingMode=0为自动采样模式，不需要判断触发条件
-			while(Get_Trigger_Status() == RESET);
-	
-		while(ADC_SampleCount < ADCx_1_SampleNbr)
-		{
-			while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
-			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1);
-			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
-			Delay_us( TimePerDiv*1000/50 -7 );//采样间隔时间
-			ADC_SampleCount++;
-		}
-		rt_mq_send(getwave_status_queue, &flag, sizeof(flag));
-		while(SamplingMode != 2);//单次采样模式
+	while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
+	while(ADC_SampleCount < ADCx_1_SampleNbr)
+	{		
+		ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1);
+		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
+		Delay_us( TimePerDiv*1000/50 -7 );//采样间隔时间
+		ADC_SampleCount++;
 	}
+	if(SamplingMode == 2)
+	{
+		StopSample = SET;
+		rt_thread_suspend(GetWave_thread);
+	}
+	rt_mq_send(getwave_status_queue, &flag, sizeof(flag));
 }
 
 
@@ -200,4 +208,5 @@ uint16_t Get_Y_Data(void)
 	ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
 	return YData;
 }
+
 

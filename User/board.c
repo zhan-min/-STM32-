@@ -77,7 +77,7 @@ void rt_hw_board_init()
 	sprintf(dispBuff,"TV: %d", TriggerValue);
 	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
 	
-	sprintf(dispBuff,"TT: %d", TriggerType);
+	sprintf(dispBuff,"RD: %d", RangeMode);
 	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
 	
 	sprintf(dispBuff,"TM: %d", TriggerMode);

@@ -44,7 +44,7 @@
 
 
 void ADCx_Init(void);
-void Get_Wave_Data(void* parameter);
+void Get_Wave(void* parameter);
 uint16_t Get_X_Data(void);
 uint16_t Get_Y_Data(void);
 
