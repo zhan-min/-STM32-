@@ -5,6 +5,11 @@
 #include "stm32f10x.h"
 #include "./font/fonts.h"
 
+//波形显示相关参数定义
+extern uint16_t Wave_Centor_X;//波形显示窗口中心坐标
+extern uint16_t Wave_Centor_Y;
+extern uint16_t Wave_Height;  //波形显示窗口尺寸
+extern uint16_t Wave_Width;
 
 /***************************************************************************************
 2^26 =0X0400 0000 = 64MB,每个 BANK 有4*64MB = 256MB
@@ -185,6 +190,7 @@ void                     ILI9341_Clear                   ( uint16_t usX, uint16_
 void                     ILI9341_SetPointPixel           ( uint16_t usX, uint16_t usY );
 uint16_t                 ILI9341_GetPointPixel           ( uint16_t usX , uint16_t usY );
 void                     ILI9341_DrawLine                ( uint16_t usX1, uint16_t usY1, uint16_t usX2, uint16_t usY2 );
+void                     ILI9341_DrawDottedLine          ( uint16_t usX1, uint16_t usY1, uint16_t usX2, uint16_t usY2 , uint8_t space);
 void                     ILI9341_DrawRectangle           ( uint16_t usX_Start, uint16_t usY_Start, uint16_t usWidth, uint16_t usHeight,uint8_t ucFilled );
 void                     ILI9341_DrawCircle              ( uint16_t usX_Center, uint16_t usY_Center, uint16_t usRadius, uint8_t ucFilled );
 void                     ILI9341_DispChar_EN             ( uint16_t usX, uint16_t usY, const char cChar );

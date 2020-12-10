@@ -148,6 +148,7 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 void PlotWave(void* parameter)
 {
 	uint16_t i;
+	uint8_t space=8, length=10;//虚线比例和短横线长度
 	rt_err_t  recv_statu = RT_EOK;
 	uint8_t   flag = 0;//波形数据采集完成标志
 	while(1)
@@ -156,11 +157,37 @@ void PlotWave(void* parameter)
 		if(recv_statu == RT_EOK && flag == 1)
 		{
 			LCD_SetColors(WHITE, BLACK);
-			ILI9341_Clear(0,0,199,LCD_Y_LENGTH);
+			//ILI9341_Clear(0,0,199,LCD_Y_LENGTH);			
+			
+			ILI9341_Clear(Wave_Centor_X-(Wave_Width/2),Wave_Centor_Y-(Wave_Height/2),Wave_Width,Wave_Height);
+			
+			//画竖线
+			ILI9341_DrawLine      (Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2));//左数第1条竖线
+			ILI9341_DrawDottedLine(Wave_Centor_X-50,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-50,             Wave_Centor_Y+(Wave_Height/2), space);//左数第2条竖线 虚线
+			ILI9341_DrawDottedLine(Wave_Centor_X,                Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X,                Wave_Centor_Y+(Wave_Height/2), space);//左数第3条竖线 虚线
+			ILI9341_DrawDottedLine(Wave_Centor_X+50,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+50,             Wave_Centor_Y+(Wave_Height/2), space);//左数第4条竖线 虚线
+			ILI9341_DrawLine      (Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2));//左数第4条竖线
+			
+			//画横线
+			ILI9341_DrawDottedLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y,                 Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y, space);//中间虚线
+			//上面的短横线
+			ILI9341_DrawLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-(Wave_Width/2)+length, Wave_Centor_Y-(Wave_Height/2));
+			ILI9341_DrawLine(Wave_Centor_X-50-length/2,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-50+length/2,  Wave_Centor_Y-(Wave_Height/2));
+			ILI9341_DrawLine(Wave_Centor_X-length/2,                Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+length/2,     Wave_Centor_Y-(Wave_Height/2));
+			ILI9341_DrawLine(Wave_Centor_X+50-length/2,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+50+length/2,  Wave_Centor_Y-(Wave_Height/2));
+			ILI9341_DrawLine(Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+(Wave_Width/2)-length, Wave_Centor_Y-(Wave_Height/2));
+			//下面的短横线
+			ILI9341_DrawLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X-(Wave_Width/2)+length, Wave_Centor_Y+(Wave_Height/2));
+			ILI9341_DrawLine(Wave_Centor_X-50-length/2,    Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X-50+length/2,           Wave_Centor_Y+(Wave_Height/2));
+			ILI9341_DrawLine(Wave_Centor_X-length/2,       Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+length/2,              Wave_Centor_Y+(Wave_Height/2));
+			ILI9341_DrawLine(Wave_Centor_X+50-length/2,    Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+50+length/2,           Wave_Centor_Y+(Wave_Height/2));
+			ILI9341_DrawLine(Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+(Wave_Width/2)-length, Wave_Centor_Y+(Wave_Height/2));
+			
+			
 			for(i=0; i <= ADCx_1_SampleNbr-2; i++)
 			{
 				LCD_SetTextColor(WHITE);
-				ILI9341_DrawLine ( i, ADC_ConvertedValue[i] /21, i+1, ADC_ConvertedValue[i+1] /21 );
+				ILI9341_DrawLine ( Wave_Centor_X-(Wave_Width/2)+i, ADC_ConvertedValue[i] /21, Wave_Centor_X-(Wave_Width/2)+i+1, ADC_ConvertedValue[i+1] /21 );
 			}
 		}
 		flag = 0;
@@ -298,7 +325,7 @@ void Run(void)
 	key_scan_queue = rt_mq_create("key_scan_queue", 1, 1, RT_IPC_FLAG_FIFO);
 	
 	/**********创建线程************/
-	Setting_thread = rt_thread_create("Setting", Setting, RT_NULL, 512, 1, 20);
+	Setting_thread = rt_thread_create("Setting", Setting, RT_NULL, 512, 2, 20);
 	if (Setting_thread != RT_NULL)
 		rt_thread_startup(Setting_thread);
 	
@@ -308,7 +335,7 @@ void Run(void)
 	
 	GetWave_thread =                         /* 线程控制块指针 */
     rt_thread_create( "GetWave",           /* 线程名字 */
-                      Get_Wave,       /* 线程入口函数 */
+                      Get_Wave,       		 /* 线程入口函数 */
                       RT_NULL,             /* 线程入口函数参数 */
                       512,                 /* 线程栈大小 */
                       3,                   /* 线程的优先级 */

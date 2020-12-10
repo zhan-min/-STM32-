@@ -167,20 +167,24 @@ void Get_Wave(void* parameter)
 	uint8_t   flag = 1;//波形数据采集完成标志位
 	uint16_t  ADC_SampleCount = 0;
 	
-	while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
-	while(ADC_SampleCount < ADCx_1_SampleNbr)
-	{		
-		ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1);
-		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
-		Delay_us( TimePerDiv*1000/50 -7 );//采样间隔时间
-		ADC_SampleCount++;
-	}
-	if(SamplingMode == 2)
+	while(1)
 	{
-		StopSample = SET;
-		rt_thread_suspend(GetWave_thread);
-	}
-	rt_mq_send(getwave_status_queue, &flag, sizeof(flag));
+		ADC_SampleCount = 0;
+		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
+		while(ADC_SampleCount < ADCx_1_SampleNbr)
+		{		
+			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1);
+			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
+			Delay_us( TimePerDiv*1000/50 -7 );//采样间隔时间
+			ADC_SampleCount++;
+		}
+		if(SamplingMode == 2)
+		{
+			StopSample = SET;
+			rt_thread_suspend(GetWave_thread);
+		}
+		rt_mq_send(getwave_status_queue, &flag, sizeof(flag));
+	}	
 }
 
 

@@ -35,6 +35,11 @@ static uint16_t CurrentTextColor   = BLACK;//前景色
 static uint16_t CurrentBackColor   = WHITE;//背景色
 
 
+uint16_t Wave_Centor_X = 120;//波形显示窗口中心坐标
+uint16_t Wave_Centor_Y = 120;
+uint16_t Wave_Height   = 200;//波形显示窗口尺寸
+uint16_t Wave_Width    = 200;
+
 
 /**
   * @brief  向ILI9341写入命令
@@ -786,10 +791,94 @@ void ILI9341_DrawLine ( uint16_t usX1, uint16_t usY1, uint16_t usX2, uint16_t us
 			usY_Current += lIncrease_Y; 
 		} 
 		
-	}  
-	
-	
+	}	
 }   
+
+
+
+/**
+ * @brief  在 ILI9341 显示器上使用 Bresenham 算法画虚线 
+ * @param  usX1  ：在特定扫描方向下线段的一个端点X坐标
+ * @param  usY1  ：在特定扫描方向下线段的一个端点Y坐标
+ * @param  usX2  ：在特定扫描方向下线段的另一个端点X坐标
+ * @param  usY2  ：在特定扫描方向下线段的另一个端点Y坐标
+ * @param  space ：虚线比例
+ * @note 可使用LCD_SetBackColor、LCD_SetTextColor、LCD_SetColors函数设置颜色
+ * @retval 无
+ */
+void ILI9341_DrawDottedLine ( uint16_t usX1, uint16_t usY1, uint16_t usX2, uint16_t usY2 , uint8_t space)
+{
+	uint16_t us; 
+	uint16_t usX_Current, usY_Current;
+	
+	int32_t lError_X = 0, lError_Y = 0, lDelta_X, lDelta_Y, lDistance; 
+	int32_t lIncrease_X, lIncrease_Y; 	
+	
+	
+	lDelta_X = usX2 - usX1; //计算坐标增量 
+	lDelta_Y = usY2 - usY1; 
+	
+	usX_Current = usX1; 
+	usY_Current = usY1; 
+	
+	
+	if ( lDelta_X > 0 ) 
+		lIncrease_X = 1; //设置单步方向 
+	
+	else if ( lDelta_X == 0 ) 
+		lIncrease_X = 0;//垂直线 
+	
+	else 
+  { 
+    lIncrease_X = -1;
+    lDelta_X = - lDelta_X;
+  } 
+
+	
+	if ( lDelta_Y > 0 )
+		lIncrease_Y = 1; 
+	
+	else if ( lDelta_Y == 0 )
+		lIncrease_Y = 0;//水平线 
+	
+	else 
+  {
+    lIncrease_Y = -1;
+    lDelta_Y = - lDelta_Y;
+  } 
+
+	
+	if (  lDelta_X > lDelta_Y )
+		lDistance = lDelta_X; //选取基本增量坐标轴 
+	
+	else 
+		lDistance = lDelta_Y; 
+
+	
+	for ( us = 0; us <= lDistance + 1; us ++ )//画线输出 
+	{
+		if(us % space <= space/2)
+			ILI9341_SetPointPixel ( usX_Current, usY_Current );//画点 
+		
+		lError_X += lDelta_X ; 
+		lError_Y += lDelta_Y ; 
+		
+		if ( lError_X > lDistance ) 
+		{ 
+			lError_X -= lDistance; 
+			usX_Current += lIncrease_X; 
+		}  
+		
+		if ( lError_Y > lDistance ) 
+		{ 
+			lError_Y -= lDistance; 
+			usY_Current += lIncrease_Y; 
+		} 
+		
+	}	
+}
+
+
 
 
 /**

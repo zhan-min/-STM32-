@@ -11,6 +11,8 @@
 #include "OSC.h"
 #include <stdio.h>
 
+#include "bsp_led.h"
+
 
 
 volatile uint32_t Time_us = 0; // us 计时变量
@@ -64,9 +66,18 @@ void EXTI0_IRQHandler(void)
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET)
 	{
 		rt_interrupt_enter();
-		rt_mq_send(setting_data_queue,
-							 &setting_data_set,
-							 sizeof(setting_data_set));
+		if(StopSample == SET)
+		{
+			StopSample = RESET;
+			rt_thread_resume(GetWave_thread);
+			LED1_OFF;
+		}
+		else if(StopSample == RESET)
+		{
+			StopSample = SET;
+			rt_thread_suspend(GetWave_thread);
+			LED1_ON;
+		}		
 		rt_interrupt_leave();
 	}
 	EXTI_ClearITPendingBit(EXTI_Line0);
