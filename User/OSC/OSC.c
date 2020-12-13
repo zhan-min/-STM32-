@@ -52,7 +52,13 @@ FlagStatus  StopSample = RESET;//停止采样标志
 *************************************************************************
 */
 
-//执行更改设置操作
+
+/**
+  * @brief  执行更改设置操作
+  * @param  CurSetItem：当前正在设置的参数
+	* @param  Operation： 对参数调整的方向
+  * @retval None
+  */
 static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 {
 	switch(CurSetItem)
@@ -114,29 +120,70 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 	rt_kprintf("\n");
 }
 
-//刷新可设置项的显示
+
+/**
+  * @brief  刷新可设置项的显示
+  * @param  Operation：当前正在设置的参数
+  * @retval None
+  */
 void Setting_Inf_Update(uint8_t CurSetItem)
 {
 	char dispBuff[100];
 	
-	ILI9341_Clear(200, 0, 120, (((sFONT *)LCD_GetFont())->Height)*5);
-	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*CurSetItem, "->");
+	ILI9341_Clear(240, 0, 80, 240);
+	ILI9341_DispString_EN(240, (((sFONT *)LCD_GetFont())->Height)*CurSetItem, "->");
 	
 	/*使用c标准库把变量转化成字符串*/
 	sprintf(dispBuff,"TV: %d", TriggerValue);
-	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
 	
 	sprintf(dispBuff,"RD: %d", RangeMode);
-	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
 	
 	sprintf(dispBuff,"TM: %d", TriggerMode);
-	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
 	
 	sprintf(dispBuff,"SM: %d", SamplingMode);
-	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
 	
 	sprintf(dispBuff,"TPD: %d", TimePerDiv);
-	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
+}
+
+/**
+  * @brief  绘制波形显示区域框和背景
+  * @param  无
+  * @retval None
+  */
+void PlotBlackground(void)
+{
+	uint8_t space=8, length=10;//虚线比例和短横线长度
+	
+	LCD_SetColors(WHITE, BLACK);			
+	
+	ILI9341_Clear(Wave_Centor_X-(Wave_Width/2),Wave_Centor_Y-(Wave_Height/2),Wave_Width,Wave_Height);
+	
+	//画竖线
+	ILI9341_DrawLine      (Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2));//左数第1条竖线
+	ILI9341_DrawDottedLine(Wave_Centor_X-50,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-50,             Wave_Centor_Y+(Wave_Height/2), space);//左数第2条竖线 虚线
+	ILI9341_DrawDottedLine(Wave_Centor_X,                Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X,                Wave_Centor_Y+(Wave_Height/2), space);//左数第3条竖线 虚线
+	ILI9341_DrawDottedLine(Wave_Centor_X+50,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+50,             Wave_Centor_Y+(Wave_Height/2), space);//左数第4条竖线 虚线
+	ILI9341_DrawLine      (Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2));//左数第4条竖线
+	
+	//画横线
+	ILI9341_DrawDottedLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y,                 Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y, space);//中间虚线
+	//上面的短横线
+	ILI9341_DrawLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-(Wave_Width/2)+length, Wave_Centor_Y-(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X-50-length/2,    Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-50+length/2,           Wave_Centor_Y-(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X-length/2,       Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+length/2,              Wave_Centor_Y-(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X+50-length/2,    Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+50+length/2,           Wave_Centor_Y-(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+(Wave_Width/2)-length, Wave_Centor_Y-(Wave_Height/2));
+	//下面的短横线
+	ILI9341_DrawLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X-(Wave_Width/2)+length, Wave_Centor_Y+(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X-50-length/2,    Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X-50+length/2,           Wave_Centor_Y+(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X-length/2,       Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+length/2,              Wave_Centor_Y+(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X+50-length/2,    Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+50+length/2,           Wave_Centor_Y+(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+(Wave_Width/2)-length, Wave_Centor_Y+(Wave_Height/2));
 }
 
 /*
@@ -148,7 +195,6 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 void PlotWave(void* parameter)
 {
 	uint16_t i;
-	uint8_t space=8, length=10;//虚线比例和短横线长度
 	rt_err_t  recv_statu = RT_EOK;
 	uint8_t   flag = 0;//波形数据采集完成标志
 	while(1)
@@ -156,34 +202,7 @@ void PlotWave(void* parameter)
 		recv_statu = rt_mq_recv(getwave_status_queue, &flag, sizeof(flag), RT_WAITING_FOREVER);
 		if(recv_statu == RT_EOK && flag == 1)
 		{
-			LCD_SetColors(WHITE, BLACK);
-			//ILI9341_Clear(0,0,199,LCD_Y_LENGTH);			
-			
-			ILI9341_Clear(Wave_Centor_X-(Wave_Width/2),Wave_Centor_Y-(Wave_Height/2),Wave_Width,Wave_Height);
-			
-			//画竖线
-			ILI9341_DrawLine      (Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2));//左数第1条竖线
-			ILI9341_DrawDottedLine(Wave_Centor_X-50,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-50,             Wave_Centor_Y+(Wave_Height/2), space);//左数第2条竖线 虚线
-			ILI9341_DrawDottedLine(Wave_Centor_X,                Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X,                Wave_Centor_Y+(Wave_Height/2), space);//左数第3条竖线 虚线
-			ILI9341_DrawDottedLine(Wave_Centor_X+50,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+50,             Wave_Centor_Y+(Wave_Height/2), space);//左数第4条竖线 虚线
-			ILI9341_DrawLine      (Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2));//左数第4条竖线
-			
-			//画横线
-			ILI9341_DrawDottedLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y,                 Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y, space);//中间虚线
-			//上面的短横线
-			ILI9341_DrawLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-(Wave_Width/2)+length, Wave_Centor_Y-(Wave_Height/2));
-			ILI9341_DrawLine(Wave_Centor_X-50-length/2,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-50+length/2,  Wave_Centor_Y-(Wave_Height/2));
-			ILI9341_DrawLine(Wave_Centor_X-length/2,                Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+length/2,     Wave_Centor_Y-(Wave_Height/2));
-			ILI9341_DrawLine(Wave_Centor_X+50-length/2,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+50+length/2,  Wave_Centor_Y-(Wave_Height/2));
-			ILI9341_DrawLine(Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+(Wave_Width/2)-length, Wave_Centor_Y-(Wave_Height/2));
-			//下面的短横线
-			ILI9341_DrawLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X-(Wave_Width/2)+length, Wave_Centor_Y+(Wave_Height/2));
-			ILI9341_DrawLine(Wave_Centor_X-50-length/2,    Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X-50+length/2,           Wave_Centor_Y+(Wave_Height/2));
-			ILI9341_DrawLine(Wave_Centor_X-length/2,       Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+length/2,              Wave_Centor_Y+(Wave_Height/2));
-			ILI9341_DrawLine(Wave_Centor_X+50-length/2,    Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+50+length/2,           Wave_Centor_Y+(Wave_Height/2));
-			ILI9341_DrawLine(Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+(Wave_Width/2)-length, Wave_Centor_Y+(Wave_Height/2));
-			
-			
+			PlotBlackground();
 			for(i=0; i <= ADCx_1_SampleNbr-2; i++)
 			{
 				LCD_SetTextColor(WHITE);

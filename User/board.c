@@ -68,26 +68,27 @@ void rt_hw_board_init()
   ILI9341_GramScan ( 3 );
 	LCD_SetColors(WHITE, BLACK);
 	ILI9341_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);
-	ILI9341_DispString_EN(210, (((sFONT *)LCD_GetFont())->Height)*0, "->");
 	
-	char dispBuff[100];
+	//绘制波形显示区域框和背景虚线
+	PlotBlackground();
 	
-	
+	ILI9341_DispString_EN(240, (((sFONT *)LCD_GetFont())->Height)*0, "->");	
+	char dispBuff[100];	
 	/*使用c标准库把变量转化成字符串*/
 	sprintf(dispBuff,"TV: %d", TriggerValue);
-	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
 	
 	sprintf(dispBuff,"RD: %d", RangeMode);
-	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
 	
 	sprintf(dispBuff,"TM: %d", TriggerMode);
-	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
 	
 	sprintf(dispBuff,"SM: %d", SamplingMode);
-	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
 	
 	sprintf(dispBuff,"TPD: %d", TimePerDiv);
-	ILI9341_DispString_EN(230, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
 	
 	
 	

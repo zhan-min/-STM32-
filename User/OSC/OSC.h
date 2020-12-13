@@ -28,7 +28,7 @@ extern             FlagStatus   StopSample;//停止采样标志
 
 
 
-
+void PlotBlackground(void);
 void PlotWave(void* parameter);
 void Init(void);
 void Run(void);

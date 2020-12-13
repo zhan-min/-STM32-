@@ -196,7 +196,7 @@ uint16_t Get_X_Data(void)
 	
 	while(ADC_GetITStatus(ADCx_2, ADC_IT_EOC) != SET);
 	XData = ADC_GetConversionValue(ADCx_2);
-	ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
+	ADC_ClearITPendingBit(ADCx_2, ADC_IT_EOC);
 	return XData;
 }
 
@@ -209,7 +209,7 @@ uint16_t Get_Y_Data(void)
 	
 	while(ADC_GetITStatus(ADCx_2, ADC_IT_EOC) != SET);
 	YData = ADC_GetConversionValue(ADCx_2);
-	ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
+	ADC_ClearITPendingBit(ADCx_2, ADC_IT_EOC);
 	return YData;
 }
 
