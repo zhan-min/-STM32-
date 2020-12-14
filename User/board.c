@@ -74,18 +74,15 @@ void rt_hw_board_init()
 	
 	ILI9341_DispString_EN(240, (((sFONT *)LCD_GetFont())->Height)*0, "->");	
 	char dispBuff[100];	
-	/*使用c标准库把变量转化成字符串*/
-	sprintf(dispBuff,"TV: %d", CurTriggerValue);
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
 	
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, "0.0 V");
 	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurRangeMode);
-	
 	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*2, CurTriggerMode);
-	
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*3, CurTriggerMode);
-	
-	sprintf(dispBuff,"TPD: %d", CurTimePerDiv);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*3, CurSamplingMode);
+	/*使用c标准库把变量转化成字符串*/
+	sprintf(dispBuff,"%d ms", CurTimePerDiv);
 	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
+			
 	
 	
 	

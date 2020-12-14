@@ -10,7 +10,7 @@
 
 
 
-#define MeasurementRange   200
+#define MeasurementRange   3.2
 
 /*
 ******************************************************************
@@ -31,7 +31,7 @@ rt_thread_t KeyScan_thread  = RT_NULL;
 
 //可设置项
 char*    RangeMode[] = {"Auto", "Manu"};
-char*    TriggerMode[] = {"↑", "↓"};
+char*    TriggerMode[] = {"Up", "Down"};
 char*    SamplingMode[] = {"A", "N", "S"};
 uint16_t TimePerDiv_Group[] = {2, 5, 10, 20, 50, 100, 200, 500};
 
@@ -42,11 +42,11 @@ uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]
 int8_t   TimePerDivOder = 0;//当前每格间隔时间的序号
 
 
-int16_t    CurTriggerValue = 0;      //代号0，触发阀值
-char*     CurRangeMode = {"auto"};  //代号1，量程模式，0：自动，1：手动
-char*     CurTriggerMode = {"↑"};   //代号2，触发模式，0：下降沿触发，1：上升沿触发
+float     CurTriggerValue = 0.0;      //代号0，触发阀值
+char*     CurRangeMode = {"Auto"};  //代号1，量程模式，0：自动，1：手动
+char*     CurTriggerMode = {"Up"};   //代号2，触发模式，0：下降沿触发，1：上升沿触发
 char*     CurSamplingMode = {"A"};  //代号3，采样模式，0：自动，1：普通，2：单次
-uint16_t  CurTimePerDiv = 1;        //代号4，每格代表的时间间隔
+uint16_t  CurTimePerDiv = 500;        //代号4，每格代表的时间间隔
 
 //要显示的信息
 __IO  uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
@@ -73,11 +73,10 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 	{
 		case 0:
 		{
-			CurTriggerValue += Operation;
-			if(CurTriggerValue < 0)
-				CurTriggerValue = 0;
-			if(CurTriggerValue > MeasurementRange)
-				CurTriggerValue = MeasurementRange;
+			if((Operation > 0) && (CurTriggerValue < MeasurementRange))
+				CurTriggerValue += 0.1;
+			if((Operation < 0) && (CurTriggerValue > 0.1))
+				CurTriggerValue -= 0.1;
 			break;
 		}
 		case 1:
@@ -87,6 +86,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 				RangeModeNrb = 0;
 			if(RangeModeNrb > 1)
 				RangeModeNrb = 1;
+			CurRangeMode = RangeMode[RangeModeNrb];
 			break;
 		}
 		case 2:
@@ -96,6 +96,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 				TriggerModeNrb = 0;
 			if(TriggerModeNrb > 1)
 				TriggerModeNrb = 1;
+			CurTriggerMode = TriggerMode[TriggerModeNrb];
 			break;
 		}
 		case 3:
@@ -105,6 +106,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 				SamplingModeNrb = 0;
 			if(SamplingModeNrb > 2)
 				SamplingModeNrb = 2;
+			CurSamplingMode = SamplingMode[SamplingModeNrb];
 			break;
 		}
 		case 4:
@@ -120,7 +122,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 		default :
 			break;
 	}
-	rt_kprintf("TriggerValue: %d\n",CurTriggerValue);
+	rt_kprintf("TriggerValue: %.1f\n",CurTriggerValue);
 	rt_kprintf("RangeMode: %s\n",CurRangeMode);
 	rt_kprintf("TriggerMode: %s\n",CurTriggerMode);
 	rt_kprintf("Sampling_mode: %s\n",CurSamplingMode);
@@ -136,37 +138,40 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
   */
 void Setting_Inf_Update(uint8_t CurSetItem)
 {
-	char dispBuff[100];	
-	float ConvertedTriggerValue;//用于将触发阀值单位转换为伏特
+	char dispBuff[100];
 	ILI9341_Clear(240, 0, 20, 240);
 	ILI9341_DispString_EN(240, (((sFONT *)LCD_GetFont())->Height)*CurSetItem, "->");
 	switch(CurSetItem)
 	{
 		case 0:
 		{
-			ConvertedTriggerValue = CurTriggerValue/200*3.3;
+			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*0, 60, (((sFONT *)LCD_GetFont())->Height));
 			/*使用c标准库把变量转化成字符串*/
-			sprintf(dispBuff,"%f V", ConvertedTriggerValue);
+			sprintf(dispBuff,"%.1f V", CurTriggerValue);
 			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
 			break;
 		}
 		case 1:
 		{
+			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*1, 60, (((sFONT *)LCD_GetFont())->Height));
 			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurRangeMode);
 			break;
 		}
 		case 2:
 		{
-			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, CurTriggerMode);
+			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*2, 60, (((sFONT *)LCD_GetFont())->Height));
+			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*2, CurTriggerMode);
 			break;
 		}
 		case 3:
 		{
-			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurSamplingMode);
+			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*3, 60, (((sFONT *)LCD_GetFont())->Height));
+			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*3, CurSamplingMode);
 			break;
 		}
 		case 4:
 		{
+			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*4, 60, (((sFONT *)LCD_GetFont())->Height));
 			/*使用c标准库把变量转化成字符串*/
 			sprintf(dispBuff,"%d ms", CurTimePerDiv);
 			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
@@ -249,7 +254,7 @@ void PlotWave(void* parameter)
 			for(i=0; i <= ADCx_1_SampleNbr-2; i++)
 			{
 				LCD_SetTextColor(WHITE);
-				ILI9341_DrawLine ( Wave_Centor_X-(Wave_Width/2)+i, ADC_ConvertedValue[i] /21, Wave_Centor_X-(Wave_Width/2)+i+1, ADC_ConvertedValue[i+1] /21 );
+				ILI9341_DrawLine ( Wave_Centor_X-(Wave_Width/2)+i, ADC_ConvertedValue[i], Wave_Centor_X-(Wave_Width/2)+i+1, ADC_ConvertedValue[i+1] );
 			}
 		}
 		flag = 0;

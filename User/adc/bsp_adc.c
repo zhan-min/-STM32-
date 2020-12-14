@@ -128,6 +128,7 @@ void ADCx_Init(void)
 FlagStatus Get_Trigger_Status(void)
 {
 	uint16_t d0, d1;
+	uint8_t ConvertedTriggerValue = CurTriggerValue/3.3*200-0.5;//用于转换触发阀值
 	
 	if(SamplingModeNrb == 0)
 		return SET;
@@ -143,12 +144,12 @@ FlagStatus Get_Trigger_Status(void)
 		
 		if(TriggerModeNrb == 0)
 		{
-			if((d0 >= CurTriggerValue) && (d1 <= CurTriggerValue))
+			if((d0 >= ConvertedTriggerValue) && (d1 <= ConvertedTriggerValue))
 				return SET;
 		}
 		else if(TriggerModeNrb == 1)
 		{
-			if((d1 >= CurTriggerValue) && (d0 <= CurTriggerValue))
+			if((d1 >= ConvertedTriggerValue) && (d0 <= ConvertedTriggerValue))
 				return SET;
 		}
 	}	
@@ -159,7 +160,7 @@ FlagStatus Get_Trigger_Status(void)
 
 void Get_Wave(void* parameter)
 {
-	uint8_t   flag = 1;//波形数据采集完成标志位
+	uint8_t   flag = 1, i=1;//波形数据采集完成标志位
 	uint16_t  ADC_SampleCount = 0;
 	
 	while(1)
@@ -170,10 +171,22 @@ void Get_Wave(void* parameter)
 		while(ADC_SampleCount < ADCx_1_SampleNbr)
 		{
 			while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
-			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1)*200/255-0.5;//将采样值映射到显示区间
+			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1)*200/4096-0.5;//将采样值映射到显示区间
 			Delay_us( CurTimePerDiv*1000/50 -7 );//采样间隔时间
 			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
 			ADC_SampleCount++;
+		}
+		if(i==1)
+		{
+			i=0;
+			while(i < ADCx_1_SampleNbr)
+			{
+				rt_kprintf("%d  ",ADC_ConvertedValue[i]);
+				if(i%10 == 0)
+					rt_kprintf("\n");
+				i++;
+			}
+			i=0;		
 		}
 		if(SamplingModeNrb == 2)
 		{
