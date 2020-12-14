@@ -10,7 +10,7 @@
 
 
 
-#define MeasurementRange   30
+#define MeasurementRange   200
 
 /*
 ******************************************************************
@@ -42,7 +42,7 @@ uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]
 int8_t   TimePerDivOder = 0;//当前每格间隔时间的序号
 
 
-int8_t    CurTriggerValue = 0;      //代号0，触发阀值
+int16_t    CurTriggerValue = 0;      //代号0，触发阀值
 char*     CurRangeMode = {"auto"};  //代号1，量程模式，0：自动，1：手动
 char*     CurTriggerMode = {"↑"};   //代号2，触发模式，0：下降沿触发，1：上升沿触发
 char*     CurSamplingMode = {"A"};  //代号3，采样模式，0：自动，1：普通，2：单次
@@ -137,14 +137,16 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 void Setting_Inf_Update(uint8_t CurSetItem)
 {
 	char dispBuff[100];	
+	float ConvertedTriggerValue;//用于将触发阀值单位转换为伏特
 	ILI9341_Clear(240, 0, 20, 240);
 	ILI9341_DispString_EN(240, (((sFONT *)LCD_GetFont())->Height)*CurSetItem, "->");
 	switch(CurSetItem)
 	{
 		case 0:
 		{
+			ConvertedTriggerValue = CurTriggerValue/200*3.3;
 			/*使用c标准库把变量转化成字符串*/
-			sprintf(dispBuff,"TV: %d", CurTriggerValue);
+			sprintf(dispBuff,"%f V", ConvertedTriggerValue);
 			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
 			break;
 		}
@@ -166,7 +168,7 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 		case 4:
 		{
 			/*使用c标准库把变量转化成字符串*/
-			sprintf(dispBuff,"TPD: %d", CurTimePerDiv);
+			sprintf(dispBuff,"%d ms", CurTimePerDiv);
 			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
 			break;
 		}
