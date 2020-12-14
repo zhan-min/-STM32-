@@ -29,16 +29,24 @@ rt_thread_t PlotWave_thread = RT_NULL;
 rt_thread_t KeyScan_thread  = RT_NULL;
 
 
+//可设置项
+char*    RangeMode[] = {"Auto", "Manu"};
+char*    TriggerMode[] = {"↑", "↓", "↑↓"};
+char*    SamplingMode[] = {"A", "N", "S"};
 uint16_t TimePerDiv_Group[] = {2, 5, 10, 20, 50, 100, 200, 500};
+
+int8_t   RangeModeNrb =0;
+int8_t   TriggerModeNrb = 0;
+int8_t   SamplingModeNrb =0;
 uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]);
 int8_t   TimePerDivOder = 0;//当前每格间隔时间的序号
 
-//可设置项
-int8_t    TriggerValue = 0;  //代号0，触发阀值
-int8_t    RangeMode = 0;  //代号1，量程模式，0：自动，1：手动
-int8_t    TriggerMode = 0;   //代号2，触发模式，0：下降沿触发，1：上升沿触发，2：上升沿下降沿触发
-int8_t    SamplingMode = 0;  //代号3，采样模式，0：自动，1：普通，2：单次
-uint16_t  TimePerDiv = 1;   //代号4，每格代表的时间间隔
+
+int8_t    CurTriggerValue = 0;      //代号0，触发阀值
+char*     CurRangeMode = {"auto"};  //代号1，量程模式，0：自动，1：手动
+char*     CurTriggerMode = {"↑"};   //代号2，触发模式，0：下降沿触发，1：上升沿触发，2：上升沿下降沿触发
+char*     CurSamplingMode = {"A"};  //代号3，采样模式，0：自动，1：普通，2：单次
+uint16_t  CurTimePerDiv = 1;        //代号4，每格代表的时间间隔
 
 //要显示的信息
 __IO  uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
@@ -65,38 +73,38 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 	{
 		case 0:
 		{
-			TriggerValue += Operation;
-			if(TriggerValue < 0)
-				TriggerValue = 0;
-			if(TriggerValue > MeasurementRange)
-				TriggerValue = MeasurementRange;
+			CurTriggerValue += Operation;
+			if(CurTriggerValue < 0)
+				CurTriggerValue = 0;
+			if(CurTriggerValue > MeasurementRange)
+				CurTriggerValue = MeasurementRange;
 			break;
 		}
 		case 1:
 		{
-			RangeMode += Operation;
-			if(RangeMode < 0)
-				RangeMode = 0;
-			if(RangeMode > 1)
-				RangeMode = 1;
+			RangeModeNrb += Operation;
+			if(RangeModeNrb < 0)
+				RangeModeNrb = 0;
+			if(RangeModeNrb > 1)
+				RangeModeNrb = 1;
 			break;
 		}
 		case 2:
 		{
-			TriggerMode += Operation;
-			if(TriggerMode < 0)
-				TriggerMode = 0;
-			if(TriggerMode > 2)
-				TriggerMode = 2;
+			TriggerModeNrb += Operation;
+			if(TriggerModeNrb < 0)
+				TriggerModeNrb = 0;
+			if(TriggerModeNrb > 2)
+				TriggerModeNrb = 2;
 			break;
 		}
 		case 3:
 		{
-			SamplingMode += Operation;
-			if(SamplingMode < 0)
-				SamplingMode = 0;
-			if(SamplingMode > 2)
-				SamplingMode = 2;
+			SamplingModeNrb += Operation;
+			if(SamplingModeNrb < 0)
+				SamplingModeNrb = 0;
+			if(SamplingModeNrb > 2)
+				SamplingModeNrb = 2;
 			break;
 		}
 		case 4:
@@ -106,17 +114,17 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 				TimePerDivOder = 0;
 			if(TimePerDivOder > TimePerDivOderNbr-1)
 				TimePerDivOder = TimePerDivOderNbr-1;
-			TimePerDiv = TimePerDiv_Group[TimePerDivOder];
+			CurTimePerDiv = TimePerDiv_Group[TimePerDivOder];
 			break;
 		}
 		default :
 			break;
 	}
-	rt_kprintf("TriggerValue: %d\n",TriggerValue);
-	rt_kprintf("RangeMode: %d\n",RangeMode);
-	rt_kprintf("TriggerMode: %d\n",TriggerMode);
-	rt_kprintf("Sampling_mode: %d\n",SamplingMode);
-	rt_kprintf("TimePerDiv: %d\n",TimePerDiv);
+	rt_kprintf("TriggerValue: %d\n",CurTriggerValue);
+	rt_kprintf("RangeMode: %s\n",CurRangeMode);
+	rt_kprintf("TriggerMode: %s\n",CurTriggerMode);
+	rt_kprintf("Sampling_mode: %s\n",CurSamplingMode);
+	rt_kprintf("TimePerDiv: %d\n",CurTimePerDiv);
 	rt_kprintf("\n");
 }
 
@@ -128,26 +136,43 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
   */
 void Setting_Inf_Update(uint8_t CurSetItem)
 {
-	char dispBuff[100];
-	
-	ILI9341_Clear(240, 0, 80, 240);
+	char dispBuff[100];	
+	ILI9341_Clear(240, 0, 20, 240);
 	ILI9341_DispString_EN(240, (((sFONT *)LCD_GetFont())->Height)*CurSetItem, "->");
+	switch(CurSetItem)
+	{
+		case 0:
+		{
+			/*使用c标准库把变量转化成字符串*/
+			sprintf(dispBuff,"TV: %d", CurTriggerValue);
+			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
+			break;
+		}
+		case 1:
+		{
+			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurRangeMode);
+			break;
+		}
+		case 2:
+		{
+			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, CurTriggerMode);
+			break;
+		}
+		case 3:
+		{
+			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurSamplingMode);
+			break;
+		}
+		case 4:
+		{
+			/*使用c标准库把变量转化成字符串*/
+			sprintf(dispBuff,"TPD: %d", CurTimePerDiv);
+			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
+			break;
+		}
+	}
 	
-	/*使用c标准库把变量转化成字符串*/
-	sprintf(dispBuff,"TV: %d", TriggerValue);
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
 	
-	sprintf(dispBuff,"RD: %d", RangeMode);
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, dispBuff);
-	
-	sprintf(dispBuff,"TM: %d", TriggerMode);
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*2, dispBuff);
-	
-	sprintf(dispBuff,"SM: %d", SamplingMode);
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*3, dispBuff);
-	
-	sprintf(dispBuff,"TPD: %d", TimePerDiv);
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
 }
 
 /**

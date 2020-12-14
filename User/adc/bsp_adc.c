@@ -129,9 +129,9 @@ FlagStatus Get_Trigger_Status(void)
 {
 	uint16_t d0, d1;
 	
-	if(SamplingMode == 0)
+	if(SamplingModeNrb == 0)
 		return SET;
-	else if((SamplingMode == 1) || (SamplingMode == 2))
+	else if((SamplingModeNrb == 1) || (SamplingModeNrb == 2))
 	{
 		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
 		d0 = ADC_GetConversionValue(ADCx_1);
@@ -141,19 +141,19 @@ FlagStatus Get_Trigger_Status(void)
 		d1 = ADC_GetConversionValue(ADCx_1);
 		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
 		
-		if(TriggerMode == 0)
+		if(TriggerModeNrb == 0)
 		{
-			if((d0 - d1 > 0) && (d1 == TriggerValue))//应该可能大概需要改成区间判断，先这样吧
+			if((d0 - d1 > 0) && (d1 == CurTriggerValue))//应该可能大概需要改成区间判断，先这样吧
 				return SET;
 		}
-		else if(TriggerMode == 1)
+		else if(TriggerModeNrb == 1)
 		{
-			if((d1 - d0 > 0) && (d1 == TriggerValue))
+			if((d1 - d0 > 0) && (d1 == CurTriggerValue))
 				return SET;
 		}
-		else if(TriggerMode == 2)
+		else if(TriggerModeNrb == 2)
 		{
-			if(d1 == TriggerValue)
+			if(d1 == CurTriggerValue)
 				return SET;
 		}
 	}	
@@ -175,10 +175,10 @@ void Get_Wave(void* parameter)
 		{		
 			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1);
 			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
-			Delay_us( TimePerDiv*1000/50 -7 );//采样间隔时间
+			Delay_us( CurTimePerDiv*1000/50 -7 );//采样间隔时间
 			ADC_SampleCount++;
 		}
-		if(SamplingMode == 2)
+		if(SamplingModeNrb == 2)
 		{
 			StopSample = SET;
 			rt_thread_suspend(GetWave_thread);

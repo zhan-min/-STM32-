@@ -93,17 +93,7 @@ void EXTI15_10_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line13) != RESET)
 	{
-		if(TimePerDivOder > 0)
-			TimePerDivOder --;
-		else
-			TimePerDivOder = TimePerDivOderNbr-1;
 		
-		TimePerDiv = TimePerDiv_Group[TimePerDivOder];
-
-		/*使用c标准库把变量转化成字符串*/
-		sprintf(dispBuff,"T: %dms",TimePerDiv);
-		ILI9341_Clear(200, 0, 120, (((sFONT *)LCD_GetFont())->Height));	
-		ILI9341_DispString_EN(210, 0,dispBuff);
 	}
 	EXTI_ClearITPendingBit(EXTI_Line13);
 }
