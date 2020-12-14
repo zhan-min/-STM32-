@@ -213,6 +213,22 @@ void PlotBlackground(void)
 	ILI9341_DrawLine(Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+(Wave_Width/2)-length, Wave_Centor_Y+(Wave_Height/2));
 }
 
+
+/**
+  * @brief  计算波形频率
+  * @param  Operation：当前正在设置的参数
+  * @retval None
+  */
+void CalculateFrequency(uint16_t *ADC_ConvertedValue)
+{
+	uint8_t n;
+	for(n=0;n < ADCx_1_SampleNbr; n++)
+	{
+		
+	}
+}
+
+
 /*
 *************************************************************************
 *                             线程定义
