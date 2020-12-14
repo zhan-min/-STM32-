@@ -31,7 +31,7 @@ rt_thread_t KeyScan_thread  = RT_NULL;
 
 //可设置项
 char*    RangeMode[] = {"Auto", "Manu"};
-char*    TriggerMode[] = {"↑", "↓", "↑↓"};
+char*    TriggerMode[] = {"↑", "↓"};
 char*    SamplingMode[] = {"A", "N", "S"};
 uint16_t TimePerDiv_Group[] = {2, 5, 10, 20, 50, 100, 200, 500};
 
@@ -44,7 +44,7 @@ int8_t   TimePerDivOder = 0;//当前每格间隔时间的序号
 
 int8_t    CurTriggerValue = 0;      //代号0，触发阀值
 char*     CurRangeMode = {"auto"};  //代号1，量程模式，0：自动，1：手动
-char*     CurTriggerMode = {"↑"};   //代号2，触发模式，0：下降沿触发，1：上升沿触发，2：上升沿下降沿触发
+char*     CurTriggerMode = {"↑"};   //代号2，触发模式，0：下降沿触发，1：上升沿触发
 char*     CurSamplingMode = {"A"};  //代号3，采样模式，0：自动，1：普通，2：单次
 uint16_t  CurTimePerDiv = 1;        //代号4，每格代表的时间间隔
 
@@ -94,8 +94,8 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 			TriggerModeNrb += Operation;
 			if(TriggerModeNrb < 0)
 				TriggerModeNrb = 0;
-			if(TriggerModeNrb > 2)
-				TriggerModeNrb = 2;
+			if(TriggerModeNrb > 1)
+				TriggerModeNrb = 1;
 			break;
 		}
 		case 3:

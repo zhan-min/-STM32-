@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="f678621b-fb35-46a4-921b-87cb3cfe59f5" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/Project/oscilloscope.hex" beforeDir="false" afterPath="$PROJECT_DIR$/Project/oscilloscope.hex" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Project/oscilloscope.uvguix.C401" beforeDir="false" afterPath="$PROJECT_DIR$/Project/oscilloscope.uvguix.C401" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/User/OSC/OSC.c" beforeDir="false" afterPath="$PROJECT_DIR$/User/OSC/OSC.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/User/OSC/OSC.h" beforeDir="false" afterPath="$PROJECT_DIR$/User/OSC/OSC.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/User/adc/bsp_adc.c" beforeDir="false" afterPath="$PROJECT_DIR$/User/adc/bsp_adc.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/User/board.c" beforeDir="false" afterPath="$PROJECT_DIR$/User/board.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/User/stm32f10x_it.c" beforeDir="false" afterPath="$PROJECT_DIR$/User/stm32f10x_it.c" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ProjectId" id="1ld7ha5Tx0Q5Xe0N6kVz4kZNch0" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f678621b-fb35-46a4-921b-87cb3cfe59f5" name="Default Changelist" comment="" />
+      <created>1607915241372</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1607915241372</updated>
+    </task>
+    <servers />
+  </component>
+</project>

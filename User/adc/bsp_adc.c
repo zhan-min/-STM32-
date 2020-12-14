@@ -143,17 +143,12 @@ FlagStatus Get_Trigger_Status(void)
 		
 		if(TriggerModeNrb == 0)
 		{
-			if((d0 - d1 > 0) && (d1 == CurTriggerValue))//应该可能大概需要改成区间判断，先这样吧
+			if((d0 >= CurTriggerValue) && (d1 <= CurTriggerValue))
 				return SET;
 		}
 		else if(TriggerModeNrb == 1)
 		{
-			if((d1 - d0 > 0) && (d1 == CurTriggerValue))
-				return SET;
-		}
-		else if(TriggerModeNrb == 2)
-		{
-			if(d1 == CurTriggerValue)
+			if((d1 >= CurTriggerValue) && (d0 <= CurTriggerValue))
 				return SET;
 		}
 	}	
@@ -170,12 +165,14 @@ void Get_Wave(void* parameter)
 	while(1)
 	{
 		ADC_SampleCount = 0;
-		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
+		
+		while(Get_Trigger_Status() != SET);
 		while(ADC_SampleCount < ADCx_1_SampleNbr)
-		{		
+		{
+			while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
 			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1);
-			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
 			Delay_us( CurTimePerDiv*1000/50 -7 );//采样间隔时间
+			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
 			ADC_SampleCount++;
 		}
 		if(SamplingModeNrb == 2)
