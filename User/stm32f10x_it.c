@@ -44,16 +44,47 @@ void  BASIC_TIM_IRQHandler (void)
   */
 void EXTI2_IRQHandler(void)
 {
-	if(EXTI_GetITStatus(EXTI_Line2) != RESET)
+	uint8_t i=42,j=24, k=92, ClickTime;
+	while(EXTI_GetITStatus(EXTI_Line2) != RESET)
+	{
+		EXTI_ClearITPendingBit(EXTI_Line2);
+	}
+	ClickTime = 1;
+	do
+    {
+        do
+        {
+            //再次按下
+            if (EXTI_GetITStatus(EXTI_Line2) != RESET)
+            {
+							ClickTime = 2;
+							rt_mq_send(setting_data_queue, &setting_data_set, sizeof(setting_data_set));
+            }while (--k);
+        } while (--j);
+    } while (--i);
+	
+	if(ClickTime == 1)
 	{
 		rt_interrupt_enter();
-		rt_mq_send(setting_data_queue,
-							 &setting_data_set,
-							 sizeof(setting_data_set));
+		if(SamplStatusNrb == 0)
+		{
+			SamplStatusNrb = 1;
+			rt_thread_resume(GetWave_thread);
+			LED2_ON;
+		}
+		else if(SamplStatusNrb == 1)
+		{
+			SamplStatusNrb = 0;
+			rt_thread_suspend(GetWave_thread);
+			LED2_OFF;
+		}
+		ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*6, 60, (((sFONT *)LCD_GetFont())->Height));
+		ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*4, CurSamplStatus);
 		rt_interrupt_leave();
 	}
 	EXTI_ClearITPendingBit(EXTI_Line2);
 }
+
 
 
 /**

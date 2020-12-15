@@ -30,23 +30,23 @@ rt_thread_t KeyScan_thread  = RT_NULL;
 
 
 //可设置项
-char*    RangeMode[] = {"Auto", "Manu"};
+char*    SamplStatus[] = {"Stop", "Run"};
 char*    TriggerMode[] = {"Up", "Down"};
 char*    SamplingMode[] = {"A", "N", "S"};
 uint16_t TimePerDiv_Group[] = {2, 5, 10, 20, 50, 100, 200, 500};
 
-int8_t   RangeModeNrb =0;
+int8_t   SamplStatusNrb =0;
 int8_t   TriggerModeNrb = 0;
 int8_t   SamplingModeNrb =0;
 uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]);
 int8_t   TimePerDivOder = 0;//当前每格间隔时间的序号
 
 
-float     CurTriggerValue = 0.0;      //代号0，触发阀值
-char*     CurRangeMode = {"Auto"};  //代号1，量程模式，0：自动，1：手动
-char*     CurTriggerMode = {"Up"};   //代号2，触发模式，0：下降沿触发，1：上升沿触发
+float     CurTriggerValue = 0.0;    //代号0，触发阀值
+char*     CurSamplStatus = {"Run"}; //代号1，采样状态，0：停止采样，1：正在采样
+char*     CurTriggerMode = {"Up"};  //代号2，触发模式，0：下降沿触发，1：上升沿触发
 char*     CurSamplingMode = {"A"};  //代号3，采样模式，0：自动，1：普通，2：单次
-uint16_t  CurTimePerDiv = 500;        //代号4，每格代表的时间间隔
+uint16_t  CurTimePerDiv = 500;      //代号4，每格代表的时间间隔
 
 //要显示的信息
 float WaveFrq = 0.0;//波形频率，单位kHz
@@ -82,12 +82,12 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 		}
 		case 1:
 		{
-			RangeModeNrb += Operation;
-			if(RangeModeNrb < 0)
-				RangeModeNrb = 0;
-			if(RangeModeNrb > 1)
-				RangeModeNrb = 1;
-			CurRangeMode = RangeMode[RangeModeNrb];
+			SamplStatusNrb += Operation;
+			if(SamplStatusNrb < 0)
+				SamplStatusNrb = 0;
+			if(SamplStatusNrb > 1)
+				SamplStatusNrb = 1;
+			CurSamplStatus = SamplStatus[SamplStatusNrb];
 			break;
 		}
 		case 2:
@@ -124,7 +124,7 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 			break;
 	}
 	rt_kprintf("TriggerValue: %.1f\n",CurTriggerValue);
-	rt_kprintf("RangeMode: %s\n",CurRangeMode);
+	rt_kprintf("RangeMode: %s\n",CurSamplStatus);
 	rt_kprintf("TriggerMode: %s\n",CurTriggerMode);
 	rt_kprintf("Sampling_mode: %s\n",CurSamplingMode);
 	rt_kprintf("TimePerDiv: %d\n",CurTimePerDiv);
@@ -155,7 +155,7 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 		case 1:
 		{
 			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*1, 60, (((sFONT *)LCD_GetFont())->Height));
-			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurRangeMode);
+			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurSamplStatus);
 			break;
 		}
 		case 2:

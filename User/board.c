@@ -76,7 +76,7 @@ void rt_hw_board_init()
 	char dispBuff[100];	
 	
 	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, "0.0 V");
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurRangeMode);
+	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurSamplStatus);
 	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*2, CurTriggerMode);
 	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*3, CurSamplingMode);
 	/*使用c标准库把变量转化成字符串*/
