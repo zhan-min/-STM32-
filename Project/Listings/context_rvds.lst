@@ -303,10 +303,10 @@ ARM Macro Assembler    Page 5
               E000ED08 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
 ork --depend=.\context_rvds.d -o.\context_rvds.o -I.\RTE\_oscilloscope -ID:\ins
-tall\Keil_v5\Arm\Packs\Keil\STM32F1xx_DFP\2.0.0\Device\Include -ID:\install\Kei
-l_v5\ARM\CMSIS\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_V
-ERSION SETA 527" --predefine="STM32F10X_HD SETA 1" --list=.\listings\context_rv
-ds.lst ..\rtthread\libcpu\arm\cortex-m3\context_rvds.S
+tall\keil526\ARM\PACK\Keil\STM32F1xx_DFP\2.1.0\Device\Include -ID:\install\keil
+526\ARM\CMSIS\Include --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VE
+RSION SETA 526" --predefine="STM32F10X_HD SETA 1" --list=.\listings\context_rvd
+s.lst ..\rtthread\libcpu\arm\cortex-m3\context_rvds.S
 
 
 

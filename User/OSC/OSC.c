@@ -49,6 +49,7 @@ char*     CurSamplingMode = {"A"};  //代号3，采样模式，0：自动，1：普通，2：单次
 uint16_t  CurTimePerDiv = 500;        //代号4，每格代表的时间间隔
 
 //要显示的信息
+float WaveFrq = 0.0;//波形频率，单位kHz
 __IO  uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
 FlagStatus  StopSample = RESET;//停止采样标志
 
@@ -221,16 +222,58 @@ void PlotBlackground(void)
 
 /**
   * @brief  计算波形频率
-  * @param  Operation：当前正在设置的参数
+  * @param  ADC_ConvertedValue：采集的波形数据
   * @retval None
   */
-void CalculateFrequency(uint16_t *ADC_ConvertedValue)
+void CalculateFrequency(void)
 {
-	uint8_t n;
-	for(n=0;n < ADCx_1_SampleNbr; n++)
-	{
+	uint8_t i, WaveLenth=0, WaveLenthSumNrb=0, SumNrb;//自动采样模式下对频率求平均值
+	uint8_t    ConvertedTriggerValue = CurTriggerValue/3.3*200-0.5;//用于转换触发阀值
+	char dispBuff[100];
+	
+	if(SamplingModeNrb == 0)
+		SumNrb = 4;
+	else
+		SumNrb = 0;
+	//计算波长
+	if(TriggerModeNrb == 0)
+		{
+			for(i=0;i < ADCx_1_SampleNbr-1; i++)
+			{
+				if((ADC_ConvertedValue[i] >= ConvertedTriggerValue) && (ADC_ConvertedValue[i+1] <= ConvertedTriggerValue))
+					WaveLenth = i;
+				break;
+			}			
+		}
+	else if(TriggerModeNrb == 1)
+		{
+			for(i=0;i < ADCx_1_SampleNbr-1; i++)
+			{
+				if((ADC_ConvertedValue[i] <= ConvertedTriggerValue) && (ADC_ConvertedValue[i+1] >= ConvertedTriggerValue))
+					WaveLenth = i;
+				break;
+			}			
+		}
 		
+		
+	if(i < ADCx_1_SampleNbr-1)
+	{
+		WaveLenth += WaveLenth;	
+		if(++WaveLenthSumNrb >= SumNrb)
+		{
+			WaveLenth = WaveLenth>>2;
+			//计算频率
+			WaveFrq = 1/(((float)WaveLenth)*((float)CurTimePerDiv)/50);//(1/(WaveLenth*CurTimePerDiv/50/1000))*1000 kHz
+			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*5, 60, (((sFONT *)LCD_GetFont())->Height));
+			/*使用c标准库把变量转化成字符串*/
+			sprintf(dispBuff,"%.1f kHz", WaveFrq);
+			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*5, dispBuff);
+		}
+		else
+			return;
 	}
+	else
+		return;
 }
 
 
@@ -242,7 +285,7 @@ void CalculateFrequency(uint16_t *ADC_ConvertedValue)
 //波形显示
 void PlotWave(void* parameter)
 {
-	uint16_t i;
+	uint16_t i;	
 	rt_err_t  recv_statu = RT_EOK;
 	uint8_t   flag = 0;//波形数据采集完成标志
 	while(1)
@@ -250,12 +293,15 @@ void PlotWave(void* parameter)
 		recv_statu = rt_mq_recv(getwave_status_queue, &flag, sizeof(flag), RT_WAITING_FOREVER);
 		if(recv_statu == RT_EOK && flag == 1)
 		{
+			//波形显示
 			PlotBlackground();
 			for(i=0; i <= ADCx_1_SampleNbr-2; i++)
 			{
 				LCD_SetTextColor(WHITE);
-				ILI9341_DrawLine ( Wave_Centor_X-(Wave_Width/2)+i, ADC_ConvertedValue[i], Wave_Centor_X-(Wave_Width/2)+i+1, ADC_ConvertedValue[i+1] );
+				ILI9341_DrawLine( Wave_Centor_X-(Wave_Width/2)+i, ADC_ConvertedValue[i], Wave_Centor_X-(Wave_Width/2)+i+1, ADC_ConvertedValue[i+1] );
 			}
+			//频率显示
+			CalculateFrequency();//计算和刷新一起			
 		}
 		flag = 0;
 	}

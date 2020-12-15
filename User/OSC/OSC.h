@@ -24,6 +24,7 @@ extern  uint16_t  CurTimePerDiv;    //代号4，每格代表的时间间隔
 
 //要显示的信息
 extern __IO        uint16_t     ADC_ConvertedValue[];//ADC采集数据
+extern             float        WaveFrq;//波形频率，单位kHz
 
 extern 						 uint16_t     TimePerDiv_Group[];
 extern             uint8_t     	TimePerDivOderNbr;
@@ -33,6 +34,7 @@ extern             FlagStatus   StopSample;//停止采样标志
 
 
 void PlotBlackground(void);
+void CalculateFrequency(void);
 void PlotWave(void* parameter);
 void Init(void);
 void Run(void);
