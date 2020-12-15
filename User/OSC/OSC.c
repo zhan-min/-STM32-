@@ -329,8 +329,9 @@ void Setting(void* parameter)
 	{
 		queue_status = rt_mq_recv(setting_data_queue, &setting_data, sizeof(setting_data), RT_WAITING_FOREVER);
 		if(queue_status == RT_EOK && setting_data == 0)//进入设置状态
-		{			
-			LED2_ON;//进入设置状态指示灯
+		{
+			LED2_OFF;//暂时关闭采样指示灯
+			LED1_ON;//进入设置状态指示灯
 			setting_data = 5;//使setting_data处于非有效值范围，为退出设置做准备
 			while(setting_data != 0)//再次按下SW时退出设置
 			{
@@ -376,7 +377,9 @@ void Setting(void* parameter)
 					}
 				}
 			}
-			LED2_OFF;//退出设置状态
+			if(SamplStatusNrb == 1)//恢复采样状态指示灯
+				LED2_ON;
+			LED1_OFF;//退出设置状态
 		}
 	}
 }
