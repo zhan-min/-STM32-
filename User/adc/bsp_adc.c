@@ -1,6 +1,7 @@
 #include "bsp_adc.h"
 #include "bsp_TiMbase.h"
 #include "OSC.h"
+#include "bsp_usart.h"
 
 
 /**
@@ -127,30 +128,40 @@ void ADCx_Init(void)
 
 FlagStatus Get_Trigger_Status(void)
 {
-	uint16_t d0, d1;
-	uint8_t ConvertedTriggerValue = CurTriggerValue/3.3*200-0.5;//用于转换触发阀值
+	float d0, d1;
+	char dispBuff[100];
 	
 	if(SamplingModeNrb == 0)
 		return SET;
 	else if((SamplingModeNrb == 1) || (SamplingModeNrb == 2))
 	{
 		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
-		d0 = ADC_GetConversionValue(ADCx_1);
+		d0 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
 		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
 		
 		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
-		d1 = ADC_GetConversionValue(ADCx_1);
+		d1 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
 		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
+		
+		
 		
 		if(TriggerModeNrb == 0)
 		{
-			if((d0 >= ConvertedTriggerValue) && (d1 <= ConvertedTriggerValue))
+			if((d0 >= CurTriggerValue) && (d1 <= CurTriggerValue))
+			{
+				sprintf(dispBuff,"%.1f V", d1);
+				rt_kprintf("d1: %s\n",dispBuff);
 				return SET;
+			}				
 		}
 		else if(TriggerModeNrb == 1)
 		{
-			if((d1 >= ConvertedTriggerValue) && (d0 <= ConvertedTriggerValue))
-				return SET;
+			if((d1 >= CurTriggerValue) && (d0 <= CurTriggerValue))
+				{
+					sprintf(dispBuff,"%.1f V", d1);
+					rt_kprintf("d1: %s\n",dispBuff);
+					return SET;
+				}
 		}
 	}	
 	return RESET;
@@ -160,7 +171,7 @@ FlagStatus Get_Trigger_Status(void)
 
 void Get_Wave(void* parameter)
 {
-	uint8_t   flag = 1, i=1;//波形数据采集完成标志位
+	uint8_t   flag = 1;//波形数据采集完成标志位
 	uint16_t  ADC_SampleCount = 0;
 	
 	while(1)
@@ -176,18 +187,18 @@ void Get_Wave(void* parameter)
 			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
 			ADC_SampleCount++;
 		}
-		if(i==1)
-		{
-			i=0;
-			while(i < ADCx_1_SampleNbr)
-			{
-				rt_kprintf("%d  ",ADC_ConvertedValue[i]);
-				if(i%10 == 0)
-					rt_kprintf("\n");
-				i++;
-			}
-			i=0;		
-		}
+//		if(i==1)
+//		{
+//			i=0;
+//			while(i < ADCx_1_SampleNbr)
+//			{
+//				rt_kprintf("%d  ",ADC_ConvertedValue[i]);
+//				if(i%10 == 0)
+//					rt_kprintf("\n");
+//				i++;
+//			}
+//			i=0;		
+//		}
 		if(SamplingModeNrb == 2)
 		{
 			StopSample = SET;

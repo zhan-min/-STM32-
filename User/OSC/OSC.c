@@ -10,7 +10,7 @@
 
 
 
-#define MeasurementRange   3.2
+#define MeasurementRange   3.3
 
 /*
 ******************************************************************
@@ -70,13 +70,14 @@ FlagStatus  StopSample = RESET;//停止采样标志
   */
 static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 {
+	char dispBuff[100];
 	switch(CurSetItem)
 	{
 		case 0:
 		{
 			if((Operation > 0) && (CurTriggerValue < MeasurementRange))
 				CurTriggerValue += 0.1;
-			if((Operation < 0) && (CurTriggerValue > 0.1))
+			if((Operation < 0) && (CurTriggerValue > 0.0))
 				CurTriggerValue -= 0.1;
 			break;
 		}
@@ -123,7 +124,8 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 		default :
 			break;
 	}
-	rt_kprintf("TriggerValue: %.1f\n",CurTriggerValue);
+	sprintf(dispBuff,"%.1f V", CurTriggerValue);
+	rt_kprintf("TriggerValue: %s\n",dispBuff);
 	rt_kprintf("RangeMode: %s\n",CurSamplStatus);
 	rt_kprintf("TriggerMode: %s\n",CurTriggerMode);
 	rt_kprintf("Sampling_mode: %s\n",CurSamplingMode);
