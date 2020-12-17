@@ -5,7 +5,7 @@
 
 
 //采样点数
-#define  ADCx_1_SampleNbr             200
+#define  ADCx_1_SampleNbr             300
 
 
 // 双模式时，ADC1和ADC2转换的数据都存放在ADC1的数据寄存器，

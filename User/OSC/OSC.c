@@ -42,14 +42,14 @@ uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]
 int8_t   TimePerDivOder = 0;//当前每格间隔时间的序号
 
 
-char*     CurSamplStatus = {"Run"};   //代号0，采样状态，0：停止采样，1：正在采样，采用中断方式设置
+char*     CurSamplStatus = {"Run"};   //代号5，采样状态，0：停止采样，1：正在采样，采用中断方式设置
 float     CurTriggerValue = 0.0;      //代号1，触发阀值
 char*     CurTriggerMode = {"Up"};    //代号2，触发模式，0：下降沿触发，1：上升沿触发
 char*     CurSamplingMode = {"Auto"}; //代号3，采样模式，0：自动，1：普通，2：单次
 uint16_t  CurTimePerDiv = 500;        //代号4，每格代表的时间间隔
 
 //要显示的信息
-float             WaveFrq = 0.0;//波形频率，单位kHz
+float     CurWaveFrq = 0.0;           //代号0，波形频率，单位kHz
 __IO  uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
 
 
@@ -130,60 +130,70 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
   */
 void Setting_Inf_Update(uint8_t CurSetItem)
 {
+	uint8_t StartPos_X=10, StartPos_Y=7, Div=50;
 	char dispBuff[100];
 	ILI9341_Clear(0, 0, 320, 30);
 	
-	ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*0, 7, CurSamplStatus);	
+	sprintf(dispBuff,"%.1fkHz", CurWaveFrq);
+	ILI9341_DispString_EN(Div*0+StartPos_X, StartPos_Y, dispBuff);	
 	/*使用c标准库把变量转化成字符串*/
-	sprintf(dispBuff,"%.1f V", CurTriggerValue);
-	ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*1, 7, dispBuff);
-	ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*2, 7, CurTriggerMode);	
-	ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*3, 7, CurSamplingMode);
-	sprintf(dispBuff,"%d ms", CurTimePerDiv);
-	ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*4, 7, dispBuff);
+	sprintf(dispBuff,"%.1fV", CurTriggerValue);
+	ILI9341_DispString_EN(Div*1+StartPos_X+10, StartPos_Y, dispBuff);
+	ILI9341_DispString_EN(Div*2+StartPos_X+15, StartPos_Y, CurTriggerMode);	
+	ILI9341_DispString_EN(Div*3+StartPos_X, StartPos_Y, CurSamplingMode);
+	sprintf(dispBuff,"%dms", CurTimePerDiv);
+	ILI9341_DispString_EN(Div*4+StartPos_X, StartPos_Y, dispBuff);
+	ILI9341_DispString_EN(Div*5+StartPos_X, StartPos_Y, CurSamplStatus);
+	
 
 	switch(CurSetItem)
 	{
 		case 0:
 		{
-			break;//采样状态不属于常规设置项不需要指示图标
+			break;//波形频率为非可设置项
 		}
 		case 1:
 		{
+			ILI9341_Clear(Div*CurSetItem+StartPos_X, StartPos_Y, Div, (((sFONT *)LCD_GetFont())->Height));
 			LCD_SetColors(BLACK, WHITE);
-			ILI9341_Clear((((sFONT *)LCD_GetFont())->Width)*1, 7, 50, (((sFONT *)LCD_GetFont())->Height));
 			/*使用c标准库把变量转化成字符串*/
-			sprintf(dispBuff,"%.1f V", CurTriggerValue);
-			ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*1, 7, dispBuff);
+			sprintf(dispBuff,"%.1fV", CurTriggerValue);
+			ILI9341_DispString_EN(Div*CurSetItem+StartPos_X+10, StartPos_Y, dispBuff);
 			LCD_SetColors(WHITE, BLACK);
 			break;
 		}		
 		case 2:
 		{
+			ILI9341_Clear(Div*CurSetItem+StartPos_X, StartPos_Y, Div, (((sFONT *)LCD_GetFont())->Height));
 			LCD_SetColors(BLACK, WHITE);
-			ILI9341_Clear((((sFONT *)LCD_GetFont())->Width)*2, 7, 50, (((sFONT *)LCD_GetFont())->Height));
-			ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*2, 7, CurTriggerMode);
+			ILI9341_DispString_EN(Div*CurSetItem+StartPos_X+15, StartPos_Y, CurTriggerMode);
 			LCD_SetColors(WHITE, BLACK);
 			break;
 		}
 		case 3:
 		{
+			ILI9341_Clear(Div*CurSetItem+StartPos_X, StartPos_Y, Div, (((sFONT *)LCD_GetFont())->Height));
 			LCD_SetColors(BLACK, WHITE);
-			ILI9341_Clear((((sFONT *)LCD_GetFont())->Width)*3, 7, 50, (((sFONT *)LCD_GetFont())->Height));
-			ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*3, 7, CurSamplingMode);
+			ILI9341_DispString_EN(Div*CurSetItem+StartPos_X, StartPos_Y, CurSamplingMode);
 			LCD_SetColors(WHITE, BLACK);
 			break;
 		}
 		case 4:
 		{
+			ILI9341_Clear(Div*CurSetItem+StartPos_X, StartPos_Y, Div, (((sFONT *)LCD_GetFont())->Height));
 			LCD_SetColors(BLACK, WHITE);
-			ILI9341_Clear((((sFONT *)LCD_GetFont())->Width)*4, 7, 50, (((sFONT *)LCD_GetFont())->Height));
 			/*使用c标准库把变量转化成字符串*/
-			sprintf(dispBuff,"%d ms", CurTimePerDiv);
-			ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*4, 7, dispBuff);
+			sprintf(dispBuff,"%dms", CurTimePerDiv);
+			ILI9341_DispString_EN(Div*CurSetItem+StartPos_X, StartPos_Y, dispBuff);
 			LCD_SetColors(WHITE, BLACK);
 			break;
 		}
+		case 5:
+		{
+			break;//采样状态不属于常规设置项不需要指示图标
+		}
+		default:
+			break;
 	}	
 }
 
@@ -239,7 +249,6 @@ void CalculateFrequency(void)
 {
 	uint16_t i, WaveLenth=0;
 	uint8_t     WaveLenthSumNrb=0, SumNrb, ConvertedTriggerValue = CurTriggerValue/3.3*200-0.5;//用于转换触发阀值  自动采样模式下对频率求平均值
-	char dispBuff[100];
 	
 	if(SamplingModeNrb == 0)
 		SumNrb = 4;
@@ -260,11 +269,8 @@ void CalculateFrequency(void)
 		{
 			WaveLenth = WaveLenth>>2;
 			//计算频率
-			WaveFrq = 1/(((float)WaveLenth)*((float)CurTimePerDiv)/50);//(1/(WaveLenth*CurTimePerDiv/50/1000))*1000 kHz
-			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*5, 60, (((sFONT *)LCD_GetFont())->Height));
-			/*使用c标准库把变量转化成字符串*/
-			sprintf(dispBuff,"%.1f kHz", WaveFrq);
-			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*5, dispBuff);
+			CurWaveFrq = 1/(((float)WaveLenth)*((float)CurTimePerDiv)/50);//(1/(WaveLenth*CurTimePerDiv/50/1000))*1000 kHz
+			Setting_Inf_Update(0);
 		}
 		else
 			return;
@@ -357,7 +363,7 @@ void Setting(void* parameter)
 							{
 								CurSetItem--;
 								Setting_Inf_Update(CurSetItem);
-							}								
+							}
 							break;
 						}
 						case 4:

@@ -72,16 +72,20 @@ void rt_hw_board_init()
 	//绘制波形显示区域框和背景虚线
 	PlotBlackground();
 	
-	ILI9341_DispString_EN(240, (((sFONT *)LCD_GetFont())->Height)*0, "->");	
-	char dispBuff[100];	
+	char dispBuff[100];
+	uint8_t StartPos_X=10, StartPos_Y=7, Div=50;
+	ILI9341_Clear(0, 0, 320, 30);
 	
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, "0.0 V");
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurSamplStatus);
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*2, CurTriggerMode);
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*3, CurSamplingMode);
+	sprintf(dispBuff,"%.1fkHz", CurWaveFrq);
+	ILI9341_DispString_EN(Div*0+StartPos_X, StartPos_Y, dispBuff);	
 	/*使用c标准库把变量转化成字符串*/
-	sprintf(dispBuff,"%d ms", CurTimePerDiv);
-	ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
+	sprintf(dispBuff,"%.1fV", CurTriggerValue);
+	ILI9341_DispString_EN(Div*1+StartPos_X+10, StartPos_Y, dispBuff);
+	ILI9341_DispString_EN(Div*2+StartPos_X+15, StartPos_Y, CurTriggerMode);	
+	ILI9341_DispString_EN(Div*3+StartPos_X, StartPos_Y, CurSamplingMode);
+	sprintf(dispBuff,"%dms", CurTimePerDiv);
+	ILI9341_DispString_EN(Div*4+StartPos_X, StartPos_Y, dispBuff);
+	ILI9341_DispString_EN(Div*5+StartPos_X, StartPos_Y, CurSamplStatus);
 			
 	
 	

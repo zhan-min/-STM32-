@@ -24,7 +24,7 @@ extern  uint16_t  CurTimePerDiv;    //代号4，每格代表的时间间隔
 
 //要显示的信息
 extern __IO        uint16_t     ADC_ConvertedValue[];//ADC采集数据
-extern             float        WaveFrq;//波形频率，单位kHz
+extern             float        CurWaveFrq;//波形频率，单位kHz
 
 extern 						 uint16_t     TimePerDiv_Group[];
 extern             uint8_t     	TimePerDivOderNbr;
