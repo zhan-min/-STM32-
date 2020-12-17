@@ -32,7 +32,7 @@ rt_thread_t KeyScan_thread  = RT_NULL;
 //可设置项
 char*    SamplStatus[] = {"Stop", "Run"};
 char*    TriggerMode[] = {"Up", "Down"};
-char*    SamplingMode[] = {"A", "N", "S"};
+char*    SamplingMode[] = {"Auto", "Normal", "Single"};
 uint16_t TimePerDiv_Group[] = {2, 5, 10, 20, 50, 100, 200, 500};
 
 int8_t   SamplStatusNrb =0;
@@ -42,16 +42,15 @@ uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]
 int8_t   TimePerDivOder = 0;//当前每格间隔时间的序号
 
 
-float     CurTriggerValue = 0.0;    //代号0，触发阀值
-char*     CurSamplStatus = {"Run"}; //代号1，采样状态，0：停止采样，1：正在采样
-char*     CurTriggerMode = {"Up"};  //代号2，触发模式，0：下降沿触发，1：上升沿触发
-char*     CurSamplingMode = {"A"};  //代号3，采样模式，0：自动，1：普通，2：单次
-uint16_t  CurTimePerDiv = 500;      //代号4，每格代表的时间间隔
+char*     CurSamplStatus = {"Run"};   //代号0，采样状态，0：停止采样，1：正在采样，采用中断方式设置
+float     CurTriggerValue = 0.0;      //代号1，触发阀值
+char*     CurTriggerMode = {"Up"};    //代号2，触发模式，0：下降沿触发，1：上升沿触发
+char*     CurSamplingMode = {"Auto"}; //代号3，采样模式，0：自动，1：普通，2：单次
+uint16_t  CurTimePerDiv = 500;        //代号4，每格代表的时间间隔
 
 //要显示的信息
-float WaveFrq = 0.0;//波形频率，单位kHz
+float             WaveFrq = 0.0;//波形频率，单位kHz
 __IO  uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
-FlagStatus  StopSample = RESET;//停止采样标志
 
 
 
@@ -73,22 +72,12 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 	char dispBuff[100];
 	switch(CurSetItem)
 	{
-		case 0:
+		case 1:
 		{
 			if((Operation > 0) && (CurTriggerValue < MeasurementRange))
 				CurTriggerValue += 0.1;
 			if((Operation < 0) && (CurTriggerValue > 0.0))
 				CurTriggerValue -= 0.1;
-			break;
-		}
-		case 1:
-		{
-			SamplStatusNrb += Operation;
-			if(SamplStatusNrb < 0)
-				SamplStatusNrb = 0;
-			if(SamplStatusNrb > 1)
-				SamplStatusNrb = 1;
-			CurSamplStatus = SamplStatus[SamplStatusNrb];
 			break;
 		}
 		case 2:
@@ -142,47 +131,60 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 void Setting_Inf_Update(uint8_t CurSetItem)
 {
 	char dispBuff[100];
-	ILI9341_Clear(240, 0, 20, 240);
-	ILI9341_DispString_EN(240, (((sFONT *)LCD_GetFont())->Height)*CurSetItem, "->");
+	ILI9341_Clear(0, 0, 320, 30);
+	
+	ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*0, 7, CurSamplStatus);	
+	/*使用c标准库把变量转化成字符串*/
+	sprintf(dispBuff,"%.1f V", CurTriggerValue);
+	ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*1, 7, dispBuff);
+	ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*2, 7, CurTriggerMode);	
+	ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*3, 7, CurSamplingMode);
+	sprintf(dispBuff,"%d ms", CurTimePerDiv);
+	ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*4, 7, dispBuff);
+
 	switch(CurSetItem)
 	{
 		case 0:
 		{
-			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*0, 60, (((sFONT *)LCD_GetFont())->Height));
-			/*使用c标准库把变量转化成字符串*/
-			sprintf(dispBuff,"%.1f V", CurTriggerValue);
-			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*0, dispBuff);
-			break;
+			break;//采样状态不属于常规设置项不需要指示图标
 		}
 		case 1:
 		{
-			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*1, 60, (((sFONT *)LCD_GetFont())->Height));
-			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurSamplStatus);
+			LCD_SetColors(BLACK, WHITE);
+			ILI9341_Clear((((sFONT *)LCD_GetFont())->Width)*1, 7, 50, (((sFONT *)LCD_GetFont())->Height));
+			/*使用c标准库把变量转化成字符串*/
+			sprintf(dispBuff,"%.1f V", CurTriggerValue);
+			ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*1, 7, dispBuff);
+			LCD_SetColors(WHITE, BLACK);
 			break;
-		}
+		}		
 		case 2:
 		{
-			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*2, 60, (((sFONT *)LCD_GetFont())->Height));
-			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*2, CurTriggerMode);
+			LCD_SetColors(BLACK, WHITE);
+			ILI9341_Clear((((sFONT *)LCD_GetFont())->Width)*2, 7, 50, (((sFONT *)LCD_GetFont())->Height));
+			ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*2, 7, CurTriggerMode);
+			LCD_SetColors(WHITE, BLACK);
 			break;
 		}
 		case 3:
 		{
-			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*3, 60, (((sFONT *)LCD_GetFont())->Height));
-			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*3, CurSamplingMode);
+			LCD_SetColors(BLACK, WHITE);
+			ILI9341_Clear((((sFONT *)LCD_GetFont())->Width)*3, 7, 50, (((sFONT *)LCD_GetFont())->Height));
+			ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*3, 7, CurSamplingMode);
+			LCD_SetColors(WHITE, BLACK);
 			break;
 		}
 		case 4:
 		{
-			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*4, 60, (((sFONT *)LCD_GetFont())->Height));
+			LCD_SetColors(BLACK, WHITE);
+			ILI9341_Clear((((sFONT *)LCD_GetFont())->Width)*4, 7, 50, (((sFONT *)LCD_GetFont())->Height));
 			/*使用c标准库把变量转化成字符串*/
 			sprintf(dispBuff,"%d ms", CurTimePerDiv);
-			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*4, dispBuff);
+			ILI9341_DispString_EN((((sFONT *)LCD_GetFont())->Width)*4, 7, dispBuff);
+			LCD_SetColors(WHITE, BLACK);
 			break;
 		}
-	}
-	
-	
+	}	
 }
 
 /**
@@ -194,30 +196,36 @@ void PlotBlackground(void)
 {
 	uint8_t space=8, length=10;//虚线比例和短横线长度
 	
-	LCD_SetColors(WHITE, BLACK);			
+	LCD_SetColors(WHITE, BLACK);
 	
 	ILI9341_Clear(Wave_Centor_X-(Wave_Width/2),Wave_Centor_Y-(Wave_Height/2),Wave_Width,Wave_Height);
 	
 	//画竖线
 	ILI9341_DrawLine      (Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2));//左数第1条竖线
+	ILI9341_DrawDottedLine(Wave_Centor_X-100,            Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-100,            Wave_Centor_Y+(Wave_Height/2), space);//左数第2条竖线 虚线
 	ILI9341_DrawDottedLine(Wave_Centor_X-50,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-50,             Wave_Centor_Y+(Wave_Height/2), space);//左数第2条竖线 虚线
 	ILI9341_DrawDottedLine(Wave_Centor_X,                Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X,                Wave_Centor_Y+(Wave_Height/2), space);//左数第3条竖线 虚线
 	ILI9341_DrawDottedLine(Wave_Centor_X+50,             Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+50,             Wave_Centor_Y+(Wave_Height/2), space);//左数第4条竖线 虚线
+	ILI9341_DrawDottedLine(Wave_Centor_X+100,            Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+100,            Wave_Centor_Y+(Wave_Height/2), space);//左数第4条竖线 虚线
 	ILI9341_DrawLine      (Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2));//左数第4条竖线
 	
 	//画横线
 	ILI9341_DrawDottedLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y,                 Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y, space);//中间虚线
 	//上面的短横线
 	ILI9341_DrawLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-(Wave_Width/2)+length, Wave_Centor_Y-(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X-100-length/2,   Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-100+length/2,          Wave_Centor_Y-(Wave_Height/2));
 	ILI9341_DrawLine(Wave_Centor_X-50-length/2,    Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X-50+length/2,           Wave_Centor_Y-(Wave_Height/2));
 	ILI9341_DrawLine(Wave_Centor_X-length/2,       Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+length/2,              Wave_Centor_Y-(Wave_Height/2));
 	ILI9341_DrawLine(Wave_Centor_X+50-length/2,    Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+50+length/2,           Wave_Centor_Y-(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X+100-length/2,   Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+100+length/2,          Wave_Centor_Y-(Wave_Height/2));
 	ILI9341_DrawLine(Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y-(Wave_Height/2), Wave_Centor_X+(Wave_Width/2)-length, Wave_Centor_Y-(Wave_Height/2));
 	//下面的短横线
 	ILI9341_DrawLine(Wave_Centor_X-(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X-(Wave_Width/2)+length, Wave_Centor_Y+(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X-100-length/2,   Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X-100+length/2,          Wave_Centor_Y+(Wave_Height/2));
 	ILI9341_DrawLine(Wave_Centor_X-50-length/2,    Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X-50+length/2,           Wave_Centor_Y+(Wave_Height/2));
 	ILI9341_DrawLine(Wave_Centor_X-length/2,       Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+length/2,              Wave_Centor_Y+(Wave_Height/2));
 	ILI9341_DrawLine(Wave_Centor_X+50-length/2,    Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+50+length/2,           Wave_Centor_Y+(Wave_Height/2));
+	ILI9341_DrawLine(Wave_Centor_X+100-length/2,   Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+100+length/2,          Wave_Centor_Y+(Wave_Height/2));
 	ILI9341_DrawLine(Wave_Centor_X+(Wave_Width/2), Wave_Centor_Y+(Wave_Height/2), Wave_Centor_X+(Wave_Width/2)-length, Wave_Centor_Y+(Wave_Height/2));
 }
 
@@ -229,8 +237,8 @@ void PlotBlackground(void)
   */
 void CalculateFrequency(void)
 {
-	uint8_t i, WaveLenth=0, WaveLenthSumNrb=0, SumNrb;//自动采样模式下对频率求平均值
-	uint8_t    ConvertedTriggerValue = CurTriggerValue/3.3*200-0.5;//用于转换触发阀值
+	uint16_t i, WaveLenth=0;
+	uint8_t     WaveLenthSumNrb=0, SumNrb, ConvertedTriggerValue = CurTriggerValue/3.3*200-0.5;//用于转换触发阀值  自动采样模式下对频率求平均值
 	char dispBuff[100];
 	
 	if(SamplingModeNrb == 0)
@@ -238,25 +246,12 @@ void CalculateFrequency(void)
 	else
 		SumNrb = 0;
 	//计算波长
-	if(TriggerModeNrb == 0)
-		{
-			for(i=0;i < ADCx_1_SampleNbr-1; i++)
-			{
-				if((ADC_ConvertedValue[i] >= ConvertedTriggerValue) && (ADC_ConvertedValue[i+1] <= ConvertedTriggerValue))
-					WaveLenth = i;
-				break;
-			}			
-		}
-	else if(TriggerModeNrb == 1)
-		{
-			for(i=0;i < ADCx_1_SampleNbr-1; i++)
-			{
-				if((ADC_ConvertedValue[i] <= ConvertedTriggerValue) && (ADC_ConvertedValue[i+1] >= ConvertedTriggerValue))
-					WaveLenth = i;
-				break;
-			}			
-		}
-		
+	for(i=0;i < ADCx_1_SampleNbr-1; i++)
+	{
+		if(Get_Trigger_Status(ADC_ConvertedValue[i], ADC_ConvertedValue[i+1]) == SET)
+			WaveLenth = i;
+		break;
+	}
 		
 	if(i < ADCx_1_SampleNbr-1)
 	{
@@ -343,35 +338,35 @@ void Setting(void* parameter)
 				{
 					rt_kprintf("setting_data: %d\n",setting_data);
 					switch(setting_data)
-					{
+					{						
 						case 1:
 						{
-							if(CurSetItem > 0)
+							Setting_do(CurSetItem, 1);//+1，-1表示对可设置项进行何种操作
+							Setting_Inf_Update(CurSetItem);
+							break;
+						}
+						case 2:
+						{
+							Setting_do(CurSetItem, -1);//+1，-1表示对可设置项进行何种操作
+							Setting_Inf_Update(CurSetItem);
+							break;
+						}
+						case 3:
+						{
+							if(CurSetItem > 1)
 							{
 								CurSetItem--;
 								Setting_Inf_Update(CurSetItem);
 							}								
 							break;
 						}
-						case 2:
+						case 4:
 						{							
 							if(CurSetItem < 4)
 							{
 								CurSetItem++;
 								Setting_Inf_Update(CurSetItem);
 							}								
-							break;
-						}
-						case 3:
-						{
-							Setting_do(CurSetItem, -1);//+1，-1表示对可设置项进行何种操作
-							Setting_Inf_Update(CurSetItem);
-							break;
-						}
-						case 4:
-						{
-							Setting_do(CurSetItem, 1);//+1，-1表示对可设置项进行何种操作
-							Setting_Inf_Update(CurSetItem);
 							break;
 						}
 						default :

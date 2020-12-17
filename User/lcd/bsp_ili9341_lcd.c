@@ -35,10 +35,10 @@ static uint16_t CurrentTextColor   = BLACK;//前景色
 static uint16_t CurrentBackColor   = WHITE;//背景色
 
 
-uint16_t Wave_Centor_X = 120;//波形显示窗口中心坐标
-uint16_t Wave_Centor_Y = 120;
+uint16_t Wave_Centor_X = 160;//波形显示窗口中心坐标
+uint16_t Wave_Centor_Y = 130;
 uint16_t Wave_Height   = 200;//波形显示窗口尺寸
-uint16_t Wave_Width    = 200;
+uint16_t Wave_Width    = 300;
 
 
 /**

@@ -44,6 +44,7 @@
 
 
 void ADCx_Init(void);
+FlagStatus Get_Trigger_Status(float d0, float d1);
 void Get_Wave(void* parameter);
 uint16_t Get_X_Data(void);
 uint16_t Get_Y_Data(void);

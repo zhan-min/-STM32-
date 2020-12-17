@@ -57,7 +57,14 @@ void EXTI2_IRQHandler(void)
 			{
 				rt_interrupt_enter();
 				rt_mq_send(setting_data_queue, &setting_data_set, sizeof(setting_data_set));
-				rt_interrupt_leave();
+				while(i-- > 0)
+				{
+					while(j-- > 0)
+					{
+						while(k-- > 0);
+					}
+				}
+				rt_interrupt_leave();				
 			}
 		else
 		{
@@ -65,17 +72,21 @@ void EXTI2_IRQHandler(void)
 			if(SamplStatusNrb == 0)
 			{
 				SamplStatusNrb = 1;
+				CurSamplStatus = SamplStatus[SamplStatusNrb];
+				Setting_Inf_Update(0);
+				
 				rt_thread_resume(GetWave_thread);
 				LED2_ON;
 			}
 			else if(SamplStatusNrb == 1)
 			{
 				SamplStatusNrb = 0;
+				CurSamplStatus = SamplStatus[SamplStatusNrb];
+				Setting_Inf_Update(0);
+				
 				rt_thread_suspend(GetWave_thread);
 				LED2_OFF;
 			}
-			ILI9341_Clear(260, (((sFONT *)LCD_GetFont())->Height)*1, 60, (((sFONT *)LCD_GetFont())->Height));
-			ILI9341_DispString_EN(260, (((sFONT *)LCD_GetFont())->Height)*1, CurSamplStatus);
 			rt_interrupt_leave();
 		}
 		EXTI_ClearITPendingBit(EXTI_Line2);
@@ -94,18 +105,7 @@ void EXTI0_IRQHandler(void)
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET)
 	{
 		rt_interrupt_enter();
-		if(StopSample == SET)
-		{
-			StopSample = RESET;
-			rt_thread_resume(GetWave_thread);
-			LED1_OFF;
-		}
-		else if(StopSample == RESET)
-		{
-			StopSample = SET;
-			rt_thread_suspend(GetWave_thread);
-			LED1_ON;
-		}		
+				
 		rt_interrupt_leave();
 	}
 	EXTI_ClearITPendingBit(EXTI_Line0);

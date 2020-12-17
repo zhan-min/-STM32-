@@ -126,43 +126,27 @@ void ADCx_Init(void)
 }
 
 
-FlagStatus Get_Trigger_Status(void)
+FlagStatus Get_Trigger_Status(float d0, float d1)
 {
-	float d0, d1;
 	char dispBuff[100];
-	
-	if(SamplingModeNrb == 0)
-		return SET;
-	else if((SamplingModeNrb == 1) || (SamplingModeNrb == 2))
+		
+	if(TriggerModeNrb == 0)
 	{
-		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
-		d0 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
-		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
-		
-		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
-		d1 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
-		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
-		
-		
-		
-		if(TriggerModeNrb == 0)
+		if((d0 >= CurTriggerValue) && (d1 <= CurTriggerValue))
 		{
-			if((d0 >= CurTriggerValue) && (d1 <= CurTriggerValue))
+			sprintf(dispBuff,"%.1f V", d1);
+			rt_kprintf("d1: %s\n",dispBuff);
+			return SET;
+		}				
+	}
+	else if(TriggerModeNrb == 1)
+	{
+		if((d1 >= CurTriggerValue) && (d0 <= CurTriggerValue))
 			{
 				sprintf(dispBuff,"%.1f V", d1);
 				rt_kprintf("d1: %s\n",dispBuff);
 				return SET;
-			}				
-		}
-		else if(TriggerModeNrb == 1)
-		{
-			if((d1 >= CurTriggerValue) && (d0 <= CurTriggerValue))
-				{
-					sprintf(dispBuff,"%.1f V", d1);
-					rt_kprintf("d1: %s\n",dispBuff);
-					return SET;
-				}
-		}
+			}
 	}	
 	return RESET;
 }
@@ -173,35 +157,44 @@ void Get_Wave(void* parameter)
 {
 	uint8_t   flag = 1;//波形数据采集完成标志位
 	uint16_t  ADC_SampleCount = 0;
+	float d0, d1;
 	
 	while(1)
 	{
 		ADC_SampleCount = 0;
 		
-		while(Get_Trigger_Status() != SET);
+		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
+		d0 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
+		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);		
+		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
+		d1 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
+		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
+		//等待触发
+		if(SamplingModeNrb != 0)
+		{
+			while(Get_Trigger_Status(d0, d1) != SET)
+			{
+				d0 = d1;
+				while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
+				d1 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
+				ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
+			}
+		}
+		//开始采样
 		while(ADC_SampleCount < ADCx_1_SampleNbr)
 		{
 			while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
-			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1)*200/4096-0.5;//将采样值映射到显示区间
+			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1)*200/4096;//将采样值映射到显示区间
 			Delay_us( CurTimePerDiv*1000/50 -7 );//采样间隔时间
 			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
 			ADC_SampleCount++;
 		}
-//		if(i==1)
-//		{
-//			i=0;
-//			while(i < ADCx_1_SampleNbr)
-//			{
-//				rt_kprintf("%d  ",ADC_ConvertedValue[i]);
-//				if(i%10 == 0)
-//					rt_kprintf("\n");
-//				i++;
-//			}
-//			i=0;		
-//		}
-		if(SamplingModeNrb == 2)
+		if(SamplingModeNrb == 2)//如果是单次模式则挂起波形采样线程
 		{
-			StopSample = SET;
+			rt_mq_send(getwave_status_queue, &flag, sizeof(flag));
+			SamplStatusNrb = 0;
+			CurSamplStatus = SamplStatus[SamplStatusNrb];
+			Setting_Inf_Update(0);
 			rt_thread_suspend(GetWave_thread);
 		}
 		rt_mq_send(getwave_status_queue, &flag, sizeof(flag));
