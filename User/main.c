@@ -1,5 +1,9 @@
 #include "OSC.h"
 
+//≤‚ ‘”√£¨¥˝…æ
+#include "bsp_led.h"
+#include "bsp_TiMbase.h"
+
 /*
 *************************************************************************
 *                             main ∫Ø ˝
@@ -11,8 +15,17 @@
   * @retval Œﬁ
   */
 int main(void)
-{	
-	Run();
+{
+	uint16_t t=1000;
+	while(1)
+	{
+		LED3_TOGGLE;
+		while(t--)
+		{
+			Delay_us(1000);
+		}
+	}
+	//Run();
 }
 
 

@@ -247,7 +247,7 @@ void PlotBlackground(void)
   */
 void CalculateFrequency(void)
 {
-	uint16_t i, WaveLenth=0;
+	uint16_t SampleNrb_Pre=0, SampleNrb_Aft=0, WaveLenth=0;
 	uint8_t     WaveLenthSumNrb=0, SumNrb, ConvertedTriggerValue = CurTriggerValue/3.3*200-0.5;//用于转换触发阀值  自动采样模式下对频率求平均值
 	
 	if(SamplingModeNrb == 0)
@@ -255,16 +255,19 @@ void CalculateFrequency(void)
 	else
 		SumNrb = 0;
 	//计算波长
-	for(i=0;i < ADCx_1_SampleNbr-1; i++)
+	while((Get_Trigger_Status(ADC_ConvertedValue[SampleNrb_Pre], ADC_ConvertedValue[SampleNrb_Pre+1]) == SET) && (SampleNrb_Pre < (ADCx_1_SampleNbr-1)))
 	{
-		if(Get_Trigger_Status(ADC_ConvertedValue[i], ADC_ConvertedValue[i+1]) == SET)
-			WaveLenth = i;
-		break;
+		SampleNrb_Pre++;
+	}
+	SampleNrb_Aft = SampleNrb_Pre;
+	while((Get_Trigger_Status(ADC_ConvertedValue[SampleNrb_Aft], ADC_ConvertedValue[SampleNrb_Aft+1]) == RESET) && (SampleNrb_Aft < (ADCx_1_SampleNbr-1)))
+	{
+		SampleNrb_Aft++;
 	}
 		
-	if(i < ADCx_1_SampleNbr-1)
+	if(SampleNrb_Aft < ADCx_1_SampleNbr-1)
 	{
-		WaveLenth += WaveLenth;	
+		WaveLenth += SampleNrb_Aft - SampleNrb_Pre;	
 		if(++WaveLenthSumNrb >= SumNrb)
 		{
 			WaveLenth = WaveLenth>>2;
