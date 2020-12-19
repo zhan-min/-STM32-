@@ -35,15 +35,15 @@ uint16_t TimePerDiv_Group[] = {2, 5, 10, 20, 50, 100, 200, 500};
 
 int8_t   SamplStatusNrb =0;
 int8_t   TriggerModeNrb = 0;
-int8_t   SamplingModeNrb =0;
+int8_t   SamplingModeNrb =1;
 uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]);
 int8_t   TimePerDivOder = 0;//当前每格间隔时间的序号
 
 
 char*     CurSamplStatus = {"Run"};   //代号5，采样状态，0：停止采样，1：正在采样，采用中断方式设置
-float     CurTriggerValue = 0.0;      //代号1，触发阀值
+float     CurTriggerValue = 2.0;      //代号1，触发阀值
 char*     CurTriggerMode = {"Up"};    //代号2，触发模式，0：下降沿触发，1：上升沿触发
-char*     CurSamplingMode = {"Auto"}; //代号3，采样模式，0：自动，1：普通，2：单次
+char*     CurSamplingMode = {"Normal"}; //代号3，采样模式，0：自动，1：普通，2：单次
 uint16_t  CurTimePerDiv = 2;        //代号4，每格代表的时间间隔
 
 //要显示的信息
@@ -51,6 +51,9 @@ float     CurWaveFrq = 0.0;           //代号0，波形频率，单位kHz
 __IO  uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
 
 
+//全局变量
+uint8_t  WaveLenthSumNrb=0;//波长计算累加次数
+uint16_t WaveLenth=0;//波长
 
 /*
 *************************************************************************
@@ -67,7 +70,6 @@ __IO  uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
   */
 static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 {
-	char dispBuff[100];
 	switch(CurSetItem)
 	{
 		case 1:
@@ -111,13 +113,6 @@ static void Setting_do(uint8_t CurSetItem, int8_t Operation)
 		default :
 			break;
 	}
-	sprintf(dispBuff,"%.1f V", CurTriggerValue);
-	rt_kprintf("TriggerValue: %s\n",dispBuff);
-	rt_kprintf("RangeMode: %s\n",CurSamplStatus);
-	rt_kprintf("TriggerMode: %s\n",CurTriggerMode);
-	rt_kprintf("Sampling_mode: %s\n",CurSamplingMode);
-	rt_kprintf("TimePerDiv: %d\n",CurTimePerDiv);
-	rt_kprintf("\n");
 }
 
 
@@ -132,7 +127,7 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 	char dispBuff[100];
 	ILI9341_Clear(0, 0, 320, 30);
 	
-	sprintf(dispBuff,"%.1fkHz", CurWaveFrq);
+	sprintf(dispBuff,"%.2fkHz", CurWaveFrq);
 	ILI9341_DispString_EN(Div*0+StartPos_X, StartPos_Y, dispBuff);	
 	/*使用c标准库把变量转化成字符串*/
 	sprintf(dispBuff,"%.1fV", CurTriggerValue);
@@ -164,7 +159,7 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 		{
 			ILI9341_Clear(Div*CurSetItem+StartPos_X, StartPos_Y, Div, (((sFONT *)LCD_GetFont())->Height));
 			LCD_SetColors(BLACK, WHITE);
-			ILI9341_DispString_EN(Div*CurSetItem+StartPos_X+15, StartPos_Y, CurTriggerMode);
+			ILI9341_DispString_EN(Div*CurSetItem+StartPos_X+5, StartPos_Y, CurTriggerMode);
 			LCD_SetColors(WHITE, BLACK);
 			break;
 		}
@@ -245,33 +240,48 @@ void PlotBlackground(void)
   */
 void CalculateFrequency(void)
 {
-	uint16_t SampleNrb_Pre=0, SampleNrb_Aft=0, WaveLenth=0;
-	uint8_t     WaveLenthSumNrb=0, SumNrb, ConvertedTriggerValue = CurTriggerValue/3.3*200-0.5;//用于转换触发阀值  自动采样模式下对频率求平均值
+	uint16_t SampleNrb_Pre=0, SampleNrb_Aft=0;
+	uint8_t  SumNrb=4;//自动采样模式下对频率求平均值
+	float d0, d1;
 	
-	if(SamplingModeNrb == 0)
-		SumNrb = 4;
-	else
-		SumNrb = 0;
+//	if(SamplingModeNrb == 0)
+//		SumNrb = 4;
+//	else
+//		SumNrb = 0;
 	//计算波长
-	while((Get_Trigger_Status(ADC_ConvertedValue[SampleNrb_Pre], ADC_ConvertedValue[SampleNrb_Pre+1]) == SET) && (SampleNrb_Pre < (ADCx_1_SampleNbr-1)))
+	d0 = ADC_ConvertedValue[SampleNrb_Pre]/200.0*3.3;
+	d1 = ADC_ConvertedValue[SampleNrb_Pre+1]/200.0*3.3;
+	while((Get_Trigger_Status(d0, d1) == SET) && (SampleNrb_Pre < (ADCx_1_SampleNbr-1)))
 	{
 		SampleNrb_Pre++;
+		d0 = ADC_ConvertedValue[SampleNrb_Pre]/200.0*3.3;
+		d1 = ADC_ConvertedValue[SampleNrb_Pre+1]/200.0*3.3;
 	}
 	SampleNrb_Aft = SampleNrb_Pre;
-	while((Get_Trigger_Status(ADC_ConvertedValue[SampleNrb_Aft], ADC_ConvertedValue[SampleNrb_Aft+1]) == RESET) && (SampleNrb_Aft < (ADCx_1_SampleNbr-1)))
+	while((Get_Trigger_Status(d0, d1) == RESET) && (SampleNrb_Aft < (ADCx_1_SampleNbr-1)))
 	{
 		SampleNrb_Aft++;
-	}
-		
+		d0 = ADC_ConvertedValue[SampleNrb_Aft]/200.0*3.3;
+		d1 = ADC_ConvertedValue[SampleNrb_Aft+1]/200.0*3.3;
+	}	
+	
+	rt_kprintf("WaveLenth: %d\n", SampleNrb_Aft - SampleNrb_Pre);
+	
 	if(SampleNrb_Aft < ADCx_1_SampleNbr-1)
 	{
-		WaveLenth += SampleNrb_Aft - SampleNrb_Pre;	
+		WaveLenth += SampleNrb_Aft - SampleNrb_Pre+2;	
 		if(++WaveLenthSumNrb >= SumNrb)
 		{
+			WaveLenthSumNrb = 0;
+//			if(SamplingModeNrb == 0)
+//			{
+//				WaveLenth = WaveLenth>>2;
+//			}		
 			WaveLenth = WaveLenth>>2;
 			//计算频率
 			CurWaveFrq = 1/(((float)WaveLenth)*((float)CurTimePerDiv)/50);//(1/(WaveLenth*CurTimePerDiv/50/1000))*1000 kHz
 			Setting_Inf_Update(0);
+			WaveLenth = 0;
 		}
 		else
 			return;
@@ -302,7 +312,8 @@ void PlotWave(void* parameter)
 			for(i=0; i <= ADCx_1_SampleNbr-2; i++)
 			{
 				LCD_SetTextColor(WHITE);
-				ILI9341_DrawLine( Wave_Centor_X-(Wave_Width/2)+i, ADC_ConvertedValue[i], Wave_Centor_X-(Wave_Width/2)+i+1, ADC_ConvertedValue[i+1] );
+				ILI9341_DrawLine( Wave_Centor_X-(Wave_Width/2)+i,   Wave_Centor_Y-(Wave_Height/2)+ADC_ConvertedValue[i],
+													Wave_Centor_X-(Wave_Width/2)+i+1, Wave_Centor_Y-(Wave_Height/2)+ADC_ConvertedValue[i+1] );
 			}
 			//频率显示
 			CalculateFrequency();//计算和刷新一起			
@@ -343,7 +354,6 @@ void Setting(void* parameter)
 				queue_status = rt_mq_recv(setting_data_queue, &setting_data, sizeof(setting_data), 5000);//五秒钟无操作则退出设置
 				if(queue_status == RT_EOK)
 				{
-					rt_kprintf("setting_data: %d\n",setting_data);
 					switch(setting_data)
 					{						
 						case 1:
@@ -429,7 +439,6 @@ void Key_Scan(void* parameter)
 						setting_data = 4;
 				}
 			}
-			rt_kprintf("setting_data: %d\n",setting_data);
 			rt_mq_send(setting_data_queue, &setting_data, sizeof(setting_data));
 		}
 	}

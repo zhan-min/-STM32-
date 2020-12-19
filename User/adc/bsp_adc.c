@@ -127,15 +127,11 @@ void ADCx_Init(void)
 
 
 FlagStatus Get_Trigger_Status(float d0, float d1)
-{
-	char dispBuff[100];
-		
+{	
 	if(TriggerModeNrb == 0)
 	{
 		if((d0 >= CurTriggerValue) && (d1 <= CurTriggerValue))
 		{
-			sprintf(dispBuff,"%.1f V", d1);
-			rt_kprintf("d1: %s\n",dispBuff);
 			return SET;
 		}				
 	}
@@ -143,8 +139,6 @@ FlagStatus Get_Trigger_Status(float d0, float d1)
 	{
 		if((d1 >= CurTriggerValue) && (d0 <= CurTriggerValue))
 			{
-				sprintf(dispBuff,"%.1f V", d1);
-				rt_kprintf("d1: %s\n",dispBuff);
 				return SET;
 			}
 	}	

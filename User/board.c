@@ -62,8 +62,8 @@ void rt_hw_board_init()
 	PS2_Key_Config();
 	
 	//其中0、3、5、6 模式适合从左至右显示文字，
- //不推荐使用其它模式显示文字	其它模式显示文字会有镜像效果			
- //其中 6 模式为大部分液晶例程的默认显示方向  
+	//不推荐使用其它模式显示文字	其它模式显示文字会有镜像效果			
+	//其中 6 模式为大部分液晶例程的默认显示方向  
   ILI9341_GramScan ( 3 );
 	LCD_SetColors(WHITE, BLACK);
 	ILI9341_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);
@@ -80,7 +80,7 @@ void rt_hw_board_init()
 	/*使用c标准库把变量转化成字符串*/
 	sprintf(dispBuff,"%.1fV", CurTriggerValue);
 	ILI9341_DispString_EN(Div*1+StartPos_X+10, StartPos_Y, dispBuff);
-	ILI9341_DispString_EN(Div*2+StartPos_X+15, StartPos_Y, CurTriggerMode);	
+	ILI9341_DispString_EN(Div*2+StartPos_X+5, StartPos_Y, CurTriggerMode);	
 	ILI9341_DispString_EN(Div*3+StartPos_X, StartPos_Y, CurSamplingMode);
 	sprintf(dispBuff,"%dms", CurTimePerDiv);
 	ILI9341_DispString_EN(Div*4+StartPos_X, StartPos_Y, dispBuff);
