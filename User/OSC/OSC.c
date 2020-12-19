@@ -130,7 +130,7 @@ void Setting_Inf_Update(uint8_t CurSetItem)
 	
 	if(CurWaveFrq < 1.0)
 	{
-		sprintf(dispBuff,"%.1fHz", CurWaveFrq*1000);
+		sprintf(dispBuff,"%dfHz", (uint16_t)(CurWaveFrq*1000));
 	}
 	else
 	{
@@ -263,24 +263,23 @@ void PlotBlackground(void)
   */
 void CalculateFrequency(void)
 {
-	uint16_t SampleNrb_Pre=0, SampleNrb_Aft=0;
-	uint8_t  SumNrb=4;//自动采样模式下对频率求平均值
+	uint16_t SampleNrb_Pre=Wave_Centor_X, SampleNrb_Aft=Wave_Centor_X+1;
+	uint8_t  SumNrb=4;//对频率求平均值
 	float d0, d1;
 	
-//	if(SamplingModeNrb == 0)
-//		SumNrb = 4;
-//	else
-//		SumNrb = 0;
 	//计算波长
-	d0 = ADC_ConvertedValue[SampleNrb_Pre]/200.0*3.3;
-	d1 = ADC_ConvertedValue[SampleNrb_Pre+1]/200.0*3.3;
-	while((Get_Trigger_Status(d0, d1) == SET) && (SampleNrb_Pre < (ADCx_1_SampleNbr-1)))
+	//从中心位置向左搜索触发点
+	d0 = ADC_ConvertedValue[SampleNrb_Pre-1]/200.0*3.3;
+	d1 = ADC_ConvertedValue[SampleNrb_Pre]/200.0*3.3;
+	while((Get_Trigger_Status(d0, d1) == RESET) && (SampleNrb_Pre > 1))
 	{
-		SampleNrb_Pre++;
-		d0 = ADC_ConvertedValue[SampleNrb_Pre]/200.0*3.3;
-		d1 = ADC_ConvertedValue[SampleNrb_Pre+1]/200.0*3.3;
+		SampleNrb_Pre--;
+		d0 = ADC_ConvertedValue[SampleNrb_Pre-1]/200.0*3.3;
+		d1 = ADC_ConvertedValue[SampleNrb_Pre]/200.0*3.3;
 	}
-	SampleNrb_Aft = SampleNrb_Pre;
+	//从中心位置向右搜索触发点
+	d0 = ADC_ConvertedValue[SampleNrb_Aft]/200.0*3.3;
+	d1 = ADC_ConvertedValue[SampleNrb_Aft+1]/200.0*3.3;
 	while((Get_Trigger_Status(d0, d1) == RESET) && (SampleNrb_Aft < (ADCx_1_SampleNbr-1)))
 	{
 		SampleNrb_Aft++;
@@ -290,9 +289,9 @@ void CalculateFrequency(void)
 	
 	rt_kprintf("WaveLenth: %d\n", SampleNrb_Aft - SampleNrb_Pre);
 	
-	if(SampleNrb_Aft < ADCx_1_SampleNbr-1)
+	if(SampleNrb_Aft - SampleNrb_Pre + 2 < ADCx_1_SampleNbr-1)
 	{
-		WaveLenth += SampleNrb_Aft - SampleNrb_Pre+2;	
+		WaveLenth += SampleNrb_Aft - SampleNrb_Pre + 1;	
 		if(++WaveLenthSumNrb >= SumNrb)
 		{
 			WaveLenthSumNrb = 0;
@@ -302,7 +301,7 @@ void CalculateFrequency(void)
 //			}		
 			WaveLenth = WaveLenth>>2;
 			//计算频率
-			CurWaveFrq = 1/(((float)WaveLenth)*((float)CurTimePerDiv)/50/1000);//单位kHz
+			CurWaveFrq = 1/(((float)WaveLenth)*((double)CurTimePerDiv)/50/1000);//单位kHz
 			Setting_Inf_Update(0);
 			WaveLenth = 0;
 		}
