@@ -56,6 +56,7 @@ void rt_hw_board_init()
   
 	ILI9341_Init ();//LCD 初始化
 	LED_GPIO_Config();
+	LED2_ON;
 	USART_Config();
 	ADCx_Init();
   EXTI_Key_Config();
@@ -79,8 +80,8 @@ void rt_hw_board_init()
 	ILI9341_DispString_EN(Div*0+StartPos_X, StartPos_Y, dispBuff);	
 	/*使用c标准库把变量转化成字符串*/
 	sprintf(dispBuff,"%.1fV", CurTriggerValue);
-	ILI9341_DispString_EN(Div*1+StartPos_X+10, StartPos_Y, dispBuff);
-	ILI9341_DispString_EN(Div*2+StartPos_X+5, StartPos_Y, CurTriggerMode);	
+	ILI9341_DispString_EN(Div*1+StartPos_X+20, StartPos_Y, dispBuff);
+	ILI9341_DispString_EN(Div*2+StartPos_X+15, StartPos_Y, CurTriggerMode);	
 	ILI9341_DispString_EN(Div*3+StartPos_X, StartPos_Y, CurSamplingMode);
 	if(CurTimePerDiv < 1000)
 	{

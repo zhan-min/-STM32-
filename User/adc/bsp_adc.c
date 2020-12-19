@@ -127,17 +127,17 @@ void ADCx_Init(void)
 
 
 FlagStatus Get_Trigger_Status(float d0, float d1)
-{	
+{
 	if(TriggerModeNrb == 0)
 	{
-		if((d0 >= CurTriggerValue) && (d1 <= CurTriggerValue))
+		if((d0 > CurTriggerValue) && (d1 <= CurTriggerValue))
 		{
 			return SET;
-		}				
+		}
 	}
 	else if(TriggerModeNrb == 1)
 	{
-		if((d1 >= CurTriggerValue) && (d0 <= CurTriggerValue))
+		if((d1 >= CurTriggerValue) && (d0 < CurTriggerValue))
 			{
 				return SET;
 			}
@@ -149,7 +149,7 @@ FlagStatus Get_Trigger_Status(float d0, float d1)
 
 void Get_Wave(void* parameter)
 {
-	uint8_t   flag = 1;//波形数据采集完成标志位
+	uint8_t   PreSample=100, flag = 1;//波形数据采集完成标志位
 	uint16_t  ADC_SampleCount = 0;
 	float d0, d1;
 	
@@ -157,23 +157,27 @@ void Get_Wave(void* parameter)
 	{
 		ADC_SampleCount = 0;
 		
-		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
-		d0 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
-		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);		
-		while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
-		d1 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
-		ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
+		while(PreSample--)//丢弃前面20个
+		{
+			while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
+			d0 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
+			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);	
+		}
+		
 		//等待触发
 		if(SamplingModeNrb != 0)
 		{
-			while(Get_Trigger_Status(d0, d1) != SET)
+			do
 			{
-				d0 = d1;
+				while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
+				d0 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
+				ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);		
 				while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) == RESET);
 				d1 = ADC_GetConversionValue(ADCx_1)/4096.0*3.3;
 				ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
-			}
+			}while(Get_Trigger_Status(d0, d1) != SET);
 		}
+		
 		//开始采样
 		while(ADC_SampleCount < ADCx_1_SampleNbr)
 		{

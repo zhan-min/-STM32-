@@ -46,10 +46,7 @@ void EXTI2_IRQHandler(void)
 				rt_mq_send(setting_data_queue, &setting_data_set, sizeof(setting_data_set));
 				while(i-- > 0)
 				{
-					while(j-- > 0)
-					{
-						while(k-- > 0);
-					}
+					while(j-- > 0);
 				}
 				rt_interrupt_leave();				
 			}
