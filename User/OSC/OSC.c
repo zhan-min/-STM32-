@@ -4,9 +4,7 @@
 #include "bsp_usart.h" 
 #include "bsp_adc.h"
 #include "bsp_led.h"
-#include "bsp_TiMbase.h"
 #include "bsp_PS2.h"
-#include "bsp_led.h"
 
 
 
@@ -46,7 +44,7 @@ char*     CurSamplStatus = {"Run"};   //´úºÅ5£¬²ÉÑù×´Ì¬£¬0£ºÍ£Ö¹²ÉÑù£¬1£ºÕýÔÚ²ÉÑ
 float     CurTriggerValue = 0.0;      //´úºÅ1£¬´¥·¢·§Öµ
 char*     CurTriggerMode = {"Up"};    //´úºÅ2£¬´¥·¢Ä£Ê½£¬0£ºÏÂ½µÑØ´¥·¢£¬1£ºÉÏÉýÑØ´¥·¢
 char*     CurSamplingMode = {"Auto"}; //´úºÅ3£¬²ÉÑùÄ£Ê½£¬0£º×Ô¶¯£¬1£ºÆÕÍ¨£¬2£ºµ¥´Î
-uint16_t  CurTimePerDiv = 500;        //´úºÅ4£¬Ã¿¸ñ´ú±íµÄÊ±¼ä¼ä¸ô
+uint16_t  CurTimePerDiv = 2;        //´úºÅ4£¬Ã¿¸ñ´ú±íµÄÊ±¼ä¼ä¸ô
 
 //ÒªÏÔÊ¾µÄÐÅÏ¢
 float     CurWaveFrq = 0.0;           //´úºÅ0£¬²¨ÐÎÆµÂÊ£¬µ¥Î»kHz

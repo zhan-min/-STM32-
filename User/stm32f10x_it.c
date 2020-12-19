@@ -6,7 +6,6 @@
 /* Includes ------------------------------------------------------------------*/
 //#include "stm32f10x_it.h"
 #include "bsp_adc.h"
-#include "bsp_TiMbase.h"
 #include "bsp_ili9341_lcd.h"
 #include "OSC.h"
 #include "bsp_Ps2.h"
@@ -21,19 +20,7 @@ uint16_t   ADC_SampleCount=0;
 uint8_t    setting_data_set = 0;
 
 
-/**
-  * @brief  This function handles TIM2 interrupt request.
-  * @param  None
-  * @retval None
-  */
-void  BASIC_TIM_IRQHandler (void)
-{
-	if ( TIM_GetITStatus( BASIC_TIM, TIM_IT_Update) != RESET ) 
-	{	
-		Time_us++;
-		TIM_ClearITPendingBit(BASIC_TIM , TIM_FLAG_Update);  		 
-	}		 	
-}
+
 
 
 /**

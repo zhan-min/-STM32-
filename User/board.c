@@ -10,7 +10,7 @@
 #include "board.h" 
 #include "bsp_ili9341_lcd.h"
 #include "bsp_adc.h"
-#include "bsp_TiMbase.h"
+#include "delay.h"
 #include "bsp_led.h"
 #include "bsp_usart.h"
 #include "bsp_key_exti.h"
@@ -51,7 +51,7 @@ void rt_hw_board_init()
 {
   /* 初始化SysTick */
   SysTick_Config( SystemCoreClock / RT_TICK_PER_SECOND );	
-    
+  
 	/* 硬件BSP初始化统统放在这里，比如LED，串口，LCD等 */
   
 	ILI9341_Init ();//LCD 初始化
@@ -60,7 +60,7 @@ void rt_hw_board_init()
 	ADCx_Init();
   EXTI_Key_Config();
 	PS2_Key_Config();
-	BASIC_TIM_Init();
+	//DelayInit();
 	
 	//其中0、3、5、6 模式适合从左至右显示文字，
  //不推荐使用其它模式显示文字	其它模式显示文字会有镜像效果			

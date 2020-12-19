@@ -16,7 +16,7 @@
         <TargetCommonOption>
           <Device>STM32F103VE</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <PackID>Keil.STM32F1xx_DFP.2.1.0</PackID>
+          <PackID>Keil.STM32F1xx_DFP.2.0.0</PackID>
           <PackURL>http://www.keil.com/pack/</PackURL>
           <Cpu>IRAM(0x20000000,0x10000) IROM(0x08000000,0x80000) CPUTYPE("Cortex-M3") CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,STM32F10X_HD</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Libraries\CMSIS;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\User;..\User\usart;..\User\adc;..\User\lcd;..\User\Led;..\User\TimBase;..\User\key_exti;..\User\OSC;..\User\PS2;..\rtthread\src;..\rtthread\libcpu\arm\cortex-m3;..\rtthread\include</IncludePath>
+              <IncludePath>..\Libraries\CMSIS;..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\User;..\User\usart;..\User\adc;..\User\lcd;..\User\Led;..\User\key_exti;..\User\OSC;..\User\PS2;..\rtthread\src;..\rtthread\libcpu\arm\cortex-m3;..\rtthread\include;..\User\Delay</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -558,11 +558,6 @@
               <FilePath>..\User\adc\bsp_adc.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_TiMbase.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\TimBase\bsp_TiMbase.c</FilePath>
-            </File>
-            <File>
               <FileName>bsp_led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\Led\bsp_led.c</FilePath>
@@ -586,6 +581,11 @@
               <FileName>board.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\board.c</FilePath>
+            </File>
+            <File>
+              <FileName>delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Delay\delay.c</FilePath>
             </File>
           </Files>
         </Group>
