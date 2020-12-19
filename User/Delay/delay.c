@@ -6,7 +6,8 @@
 void rt_hw_us_delay(unsigned int us)
 {
 	rt_uint32_t delta, current_delay, tick;
-
+	if(us == 0)
+		return;
 	//获得延时需要经过的tick数
 	tick = us * (SysTick->LOAD/(1000000/RT_TICK_PER_SECOND));
 	//获得当前时间

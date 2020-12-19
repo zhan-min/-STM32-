@@ -53,8 +53,8 @@ static  void ADCx_Mode_Config(void)
 	
 	ADC_Init(ADCx_1, &ADC_InitStructure);
 	
-	RCC_ADCCLKConfig(RCC_PCLK2_Div6);//12MHz
-	ADC_RegularChannelConfig(ADCx_1, ADCx_1_CHANNEL, 1, ADC_SampleTime_71Cycles5);//转换时间7us
+	RCC_ADCCLKConfig(RCC_PCLK2_Div4);//14MHz
+	ADC_RegularChannelConfig(ADCx_1, ADCx_1_CHANNEL, 1, ADC_SampleTime_1Cycles5);//转换时间1us
 	
 	ADC_ITConfig(ADCx_1, ADC_IT_EOC, ENABLE);
 	ADC_Cmd(ADCx_1, ENABLE);
@@ -179,7 +179,14 @@ void Get_Wave(void* parameter)
 		{
 			while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
 			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1)*200/4096;//将采样值映射到显示区间
-			rt_hw_us_delay( CurTimePerDiv*1000/50 -7 );//采样间隔时间
+			if((CurTimePerDiv/50 -1) != 0 && (CurTimePerDiv/50 -1) <= 1000)
+			{
+				rt_hw_us_delay( CurTimePerDiv/50 -1 );//采样间隔时间
+			}
+			else
+			{
+				rt_thread_delay( (CurTimePerDiv/50)/1000 );//采样间隔时间
+			}			
 			ADC_ClearITPendingBit(ADCx_1, ADC_IT_EOC);
 			ADC_SampleCount++;
 		}

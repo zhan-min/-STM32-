@@ -82,7 +82,14 @@ void rt_hw_board_init()
 	ILI9341_DispString_EN(Div*1+StartPos_X+10, StartPos_Y, dispBuff);
 	ILI9341_DispString_EN(Div*2+StartPos_X+5, StartPos_Y, CurTriggerMode);	
 	ILI9341_DispString_EN(Div*3+StartPos_X, StartPos_Y, CurSamplingMode);
-	sprintf(dispBuff,"%dms", CurTimePerDiv);
+	if(CurTimePerDiv < 1000)
+	{
+		sprintf(dispBuff,"%dus", CurTimePerDiv);
+	}
+	else
+	{
+		sprintf(dispBuff,"%dms", CurTimePerDiv/1000);
+	}
 	ILI9341_DispString_EN(Div*4+StartPos_X, StartPos_Y, dispBuff);
 	ILI9341_DispString_EN(Div*5+StartPos_X, StartPos_Y, CurSamplStatus);
 			
