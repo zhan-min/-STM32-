@@ -1,59 +1,31 @@
 #include "delay.h"
-#include "stdint.h"
+#include "rtthread.h"
 #include "stm32f10x.h"
 
-static uint8_t fac_us=0;  //us延时倍乘数
-static uint16_t fac_ms=0; //ms延时倍乘数
 
-
-void DelayInit(void)
+void rt_hw_us_delay(unsigned int us)
 {
-    //选择外部时钟
-    SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);
-    fac_us=SystemCoreClock/8000000;  //设置为系统时钟的1/8
-    fac_ms=(u16)fac_us*1000;         
-}
+	rt_uint32_t delta, current_delay, tick;
 
-void Delay_us(unsigned int us)
-{
-    u32 temp;
-    SysTick->LOAD=us*fac_us;             //加载时间
-    SysTick->VAL=0x00;                   //清空计时器
-    SysTick->CTRL|=SysTick_CTRL_ENABLE_Msk;
-    do
-    {
-        temp=SysTick->CTRL;
-    }
-    while(temp&0x01&&!(temp&(1<<16)));         //等待时间到达
-    SysTick->CTRL&=~SysTick_CTRL_ENABLE_Msk;   //关闭计时器
-    SysTick->VAL=0x00;                         //清空计时器
-}
-
-
-void Delay_ms(unsigned int ms)
-{
-    u32 temp;
-    SysTick->LOAD=ms*fac_ms;             
-    SysTick->VAL=0x00;                   
-    SysTick->CTRL|=SysTick_CTRL_ENABLE_Msk;
-    do
-    {
-        temp=SysTick->CTRL;
-    }
-    while(temp&0x01&&!(temp&(1<<16)));   
-    SysTick->CTRL&=~SysTick_CTRL_ENABLE_Msk;   
-    SysTick->VAL=0x00;                   
+	//获得延时需要经过的tick数
+	tick = us * (SysTick->LOAD/(1000000/RT_TICK_PER_SECOND));
+	//获得当前时间
+	delta = SysTick->VAL;
+	
+	//循环获得当前时间，直到达到指定时间后退出循环
+	do
+	{
+		if(delta > SysTick->VAL)
+		{
+			current_delay = delta - SysTick->VAL;
+		}
+		else
+		{
+			//延时跨越了一次OS tick的边界
+			current_delay = SysTick->LOAD + delta - SysTick->VAL;
+		}
+	}while(current_delay < tick);
 }
 
 
-void Delay_s(unsigned int s)
-{
-    unsigned char i;
-    for(i=0;i<s;i++)
-    {
-        Delay_ms(1000);
-    }
-
-
-}
 

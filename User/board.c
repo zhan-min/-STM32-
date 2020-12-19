@@ -60,7 +60,6 @@ void rt_hw_board_init()
 	ADCx_Init();
   EXTI_Key_Config();
 	PS2_Key_Config();
-	//DelayInit();
 	
 	//其中0、3、5、6 模式适合从左至右显示文字，
  //不推荐使用其它模式显示文字	其它模式显示文字会有镜像效果			
