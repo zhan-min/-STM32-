@@ -59,7 +59,8 @@ void EXTI2_IRQHandler(void)
 				CurSamplStatus = SamplStatus[SamplStatusNrb];
 				Setting_Inf_Update(5);
 				
-				rt_thread_resume(GetWave_thread);
+				StopSample = RESET;
+				//rt_thread_resume(GetWave_thread);
 				LED2_ON;
 			}
 			else if(SamplStatusNrb == 1)
@@ -68,7 +69,8 @@ void EXTI2_IRQHandler(void)
 				CurSamplStatus = SamplStatus[SamplStatusNrb];
 				Setting_Inf_Update(5);
 				
-				rt_thread_suspend(GetWave_thread);
+				StopSample = SET;
+				//rt_thread_suspend(GetWave_thread);
 				LED2_OFF;
 			}
 			rt_interrupt_leave();

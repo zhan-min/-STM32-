@@ -182,7 +182,7 @@ void Get_Wave(void* parameter)
 		while(ADC_SampleCount < ADCx_1_SampleNbr)
 		{
 			while(ADC_GetITStatus(ADCx_1, ADC_IT_EOC) != SET);
-			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1)*200/4096;//将采样值映射到显示区间
+			ADC_ConvertedValue[ADC_SampleCount] = ADC_GetConversionValue(ADCx_1)*198/4096;//将采样值映射到显示区间
 			if((CurTimePerDiv/50 -1) != 0 && (CurTimePerDiv/50 -1) <= 1000)
 			{
 				rt_hw_us_delay( CurTimePerDiv/50 -1 );//采样间隔时间

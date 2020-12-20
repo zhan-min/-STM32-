@@ -38,14 +38,14 @@ int8_t   SamplStatusNrb =1;
 int8_t   TriggerModeNrb = 0;
 int8_t   SamplingModeNrb =1;
 uint8_t  TimePerDivOderNbr = sizeof(TimePerDiv_Group)/sizeof(TimePerDiv_Group[0]);
-int8_t   TimePerDivOder = 6;//当前每格间隔时间的序号
+int8_t   TimePerDivOder = 4;//当前每格间隔时间的序号
 
 
 char*     CurSamplStatus = {"Run"};   //代号5，采样状态，0：停止采样，1：正在采样，采用中断方式设置
 float     CurTriggerValue = 2.0;      //代号1，触发阀值
 char*     CurTriggerMode = {"Up"};    //代号2，触发模式，0：下降沿触发，1：上升沿触发
 char*     CurSamplingMode = {"Normal"}; //代号3，采样模式，0：自动，1：普通，2：单次
-uint32_t  CurTimePerDiv = 5000;        //代号4，每格代表的时间间隔
+uint32_t  CurTimePerDiv = 1000;        //代号4，每格代表的时间间隔
 
 //要显示的信息
 double     CurWaveFrq = 0.0;           //代号0，波形频率，单位kHz
@@ -55,6 +55,7 @@ __IO  uint16_t    ADC_ConvertedValue[ADCx_1_SampleNbr] = {0};//ADC采集数据
 //全局变量
 uint8_t  WaveLenthSumNrb=0;//波长计算累加次数
 uint16_t WaveLenth=0;//波长
+FlagStatus StopSample = RESET;
 
 /*
 *************************************************************************
@@ -327,15 +328,32 @@ void PlotWave(void* parameter)
 	while(1)
 	{
 		recv_statu = rt_mq_recv(getwave_status_queue, &flag, sizeof(flag), RT_WAITING_FOREVER);
-		if(recv_statu == RT_EOK && flag == 1)
+		if(recv_statu == RT_EOK && flag == 1 && StopSample == RESET)
 		{
+			//清除波形显示区域
+			ILI9341_Clear(Wave_Centor_X-(Wave_Width/2)+1,Wave_Centor_Y-(Wave_Height/2)+1,50-1,100-1);
+			ILI9341_Clear(Wave_Centor_X-100+1,           Wave_Centor_Y-(Wave_Height/2)+1,50-1,100-1);
+			ILI9341_Clear(Wave_Centor_X-50+1,            Wave_Centor_Y-(Wave_Height/2)+1,50-1,100-1);
+			ILI9341_Clear(Wave_Centor_X+1,               Wave_Centor_Y-(Wave_Height/2)+1,50-1,100-1);
+			ILI9341_Clear(Wave_Centor_X+50+1,            Wave_Centor_Y-(Wave_Height/2)+1,50-1,100-1);
+			ILI9341_Clear(Wave_Centor_X+100+1,           Wave_Centor_Y-(Wave_Height/2)+1,50-1,100-1);
+			
+			ILI9341_Clear(Wave_Centor_X-(Wave_Width/2)+1,Wave_Centor_Y+1,50-1,100-1);
+			ILI9341_Clear(Wave_Centor_X-100+1,           Wave_Centor_Y+1,50-1,100-1);
+			ILI9341_Clear(Wave_Centor_X-50+1,            Wave_Centor_Y+1,50-1,100-1);
+			ILI9341_Clear(Wave_Centor_X+1,               Wave_Centor_Y+1,50-1,100-1);
+			ILI9341_Clear(Wave_Centor_X+50+1,            Wave_Centor_Y+1,50-1,100-1);
+			ILI9341_Clear(Wave_Centor_X+100+1,           Wave_Centor_Y+1,50-1,100-1);
 			//波形显示
-			PlotBlackground();
+			//PlotBlackground();
 			for(i=0; i <= ADCx_1_SampleNbr-2; i++)
 			{
-				LCD_SetTextColor(WHITE);
-				ILI9341_DrawLine( Wave_Centor_X-(Wave_Width/2)+i,   Wave_Centor_Y-(Wave_Height/2)+ADC_ConvertedValue[i],
-													Wave_Centor_X-(Wave_Width/2)+i+1, Wave_Centor_Y-(Wave_Height/2)+ADC_ConvertedValue[i+1] );
+				if((i%50 != 0) && ((i+1)%50 != 0) && (ADC_ConvertedValue[i] != 100) && (ADC_ConvertedValue[i+1] != 100))
+				{
+					LCD_SetTextColor(WHITE);
+					ILI9341_DrawLine( Wave_Centor_X-(Wave_Width/2)+i,   Wave_Centor_Y-(Wave_Height/2)+ADC_ConvertedValue[i]+1,
+														Wave_Centor_X-(Wave_Width/2)+i+1, Wave_Centor_Y-(Wave_Height/2)+ADC_ConvertedValue[i+1]+1 );
+				}
 			}
 			//频率显示
 			CalculateFrequency();//计算和刷新一起			

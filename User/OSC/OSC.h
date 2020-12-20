@@ -31,6 +31,8 @@ extern             uint8_t     	TimePerDivOderNbr;
 extern             int8_t     	TimePerDivOder;//当前每格间隔时间的序号
 extern             char*        SamplStatus[];
 
+extern             FlagStatus StopSample;
+
 
 void Setting_Inf_Update(uint8_t CurSetItem);
 void PlotBlackground(void);
